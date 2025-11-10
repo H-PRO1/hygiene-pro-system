@@ -1,0 +1,15 @@
+{
+  "version": "8.15-FIXED",
+  "releaseDate": "2025-11-10",
+  "stable": true,
+  "previous": "8.14",
+  "updateRequired": false,
+  "criticalFix": true,
+  "features": [
+    "Auto-temperature records",
+    "Historical data filling (90 days)",
+    "Business type timing respect",
+    "All equipment support"
+  ],
+  "notes": "Critical bug fix: Temperature auto-records restoration"
+}
