@@ -325,22 +325,31 @@
             border-right: 1px solid #f1f3f5;
             font-weight: 600;
             color: #667eea;
-            min-width: 150px;
+            min-width: 240px;
+            width: 240px;
+            max-width: 240px;
             display: flex;
-            flex-direction: column;
-            gap: 5px;
+            flex-direction: row;
+            gap: 10px;
+            align-items: center;
+            white-space: nowrap;
+            overflow: visible;
         }
 
         .datetime-date {
             font-size: 0.95rem;
             font-weight: 700;
             color: #667eea;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .datetime-time {
             font-size: 0.85rem;
             font-weight: 500;
             color: #495057;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .cleaning-fields-container {
@@ -2152,16 +2161,17 @@
             }
         }
         
-        // ✅ v8.10: PROPER AUTO-BACKUP SYSTEM
+        // ✅ v8.15-FIXED: AUTO-BACKUP SYSTEM - Every 12 hours AND every 24 hours
         
         function startAutoBackup() {
             // Check immediately on load
             checkAndAutoBackup();
             
-            // Check every 24 hours
-            setInterval(checkAndAutoBackup, 86400000); // 24h = 86400000ms
+            // ✅ Check BOTH every 12 hours AND every 24 hours
+            setInterval(checkAndAutoBackup, 43200000);  // 12h = 43200000ms
+            setInterval(checkAndAutoBackup, 86400000);  // 24h = 86400000ms
             
-            console.log('✅ Auto-backup system started');
+            console.log('✅ Auto-backup system started (12h + 24h intervals)');
         }
         
         function checkAndAutoBackup() {
@@ -2177,8 +2187,8 @@
             const lastBackupDate = new Date(lastBackup);
             const hoursDiff = (now - lastBackupDate) / (1000 * 60 * 60);
             
-            // If more than 23 hours have passed, do backup
-            if (hoursDiff >= 23) {
+            // ✅ If more than 11.5 hours have passed, do backup (catches both 12h and 24h cycles)
+            if (hoursDiff >= 11.5) {
                 createAutoBackup();
             }
         }
@@ -3478,7 +3488,14 @@
         const cleanExists = systemData.cleaning.some(c => c.date === pastDateStr);
         
         if (!cleanExists) {
-            const cleaningTime = recordingTimes[0] || '08:00';
+            // ✅ v8.15-FIXED: Use scheduled cleaning times, NOT temperature times!
+            const cleaningSchedule = systemData.cleaningSettings?.scheduledTimes || [];
+            const cleaningTime = cleaningSchedule.length > 0 ? cleaningSchedule[0] : null;
+            
+            // Only create if cleaning time is actually scheduled
+            if (!cleaningTime) {
+                return; // No cleaning time scheduled - skip creation
+            }
             
             systemData.cleaning.push({
                 id: Date.now() + Math.random(),
@@ -3542,9 +3559,12 @@
         }
     });
     
-    // Καθαρισμός
-    const cleaningTime = recordingTimes[0] || '08:00';
-    const cleaningHour = parseInt(cleaningTime.split(':')[0]);
+    // Καθαρισμός - ✅ v8.15-FIXED: Use ONLY scheduled cleaning times!
+    const cleaningSchedule = systemData.cleaningSettings?.scheduledTimes || [];
+    
+    // Process EACH scheduled cleaning time (not just first temperature time!)
+    for (const cleaningTime of cleaningSchedule) {
+        const cleaningHour = parseInt(cleaningTime.split(':')[0]);
     
     if (currentHour >= cleaningHour) {
         const cleanExists = systemData.cleaning.some(c => c.date === dateStr);
@@ -3561,6 +3581,7 @@
             });
         }
     }
+    } // ✅ Close for loop (cleaning times)
     
     saveData();
     updateDashboard();
@@ -3764,8 +3785,8 @@ if (temp >= -22 && temp <= -18) {
                 
                 return `
                     <tr class="cleaning-row">
-                        <td class="cleaning-cell-date">${c.date}</td>
-                        <td class="cleaning-cell-time">${c.time}</td>
+                        <td class="cleaning-cell-date" style="min-width: 140px; white-space: nowrap;">${c.date}</td>
+                        <td class="cleaning-cell-time" style="min-width: 60px; white-space: nowrap;">${c.time}</td>
                         <td class="cleaning-fields-container">
                             <div class="cleaning-fields-grid">
                                 ${fieldsHTML}
