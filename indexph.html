@@ -325,31 +325,22 @@
             border-right: 1px solid #f1f3f5;
             font-weight: 600;
             color: #667eea;
-            min-width: 240px;
-            width: 240px;
-            max-width: 240px;
+            min-width: 150px;
             display: flex;
-            flex-direction: row;
-            gap: 10px;
-            align-items: center;
-            white-space: nowrap;
-            overflow: visible;
+            flex-direction: column;
+            gap: 5px;
         }
 
         .datetime-date {
             font-size: 0.95rem;
             font-weight: 700;
             color: #667eea;
-            white-space: nowrap;
-            flex-shrink: 0;
         }
 
         .datetime-time {
             font-size: 0.85rem;
             font-weight: 500;
             color: #495057;
-            white-space: nowrap;
-            flex-shrink: 0;
         }
 
         .cleaning-fields-container {
@@ -889,41 +880,119 @@
                 
                 <!-- Step 2 -->
                 <div class="wizard-step" id="step2">
-                    <h2>Τύπος Επιχείρησης & Ώρες Καταγραφής</h2>
+                    <h2>📋 Όνομα & Ώρες Καταγραφής</h2>
                     
-                    <!-- Business Type Selection -->
+                    <!-- Business Name -->
                     <div class="form-group">
-                        <label class="form-label">Επιλέξτε τον τύπο της επιχείρησής σας:</label>
-                        <select id="businessTypeSelect" class="form-select" onchange="onBusinessTypeChange()">
-                            <option value="">-- Εισαγάγετε τύπο --</option>
-                            <option value="butcher">🥩 Κρεοπωλείο (08:00, 14:00, 17:00)</option>
-                            <option value="restaurant">🍝 Εστιατόριο (11:00, 15:00, 20:00)</option>
-                            <option value="bakery">🍞 Αρτοποιείο (06:00, 12:00, 18:00)</option>
-                            <option value="pastry">🎂 Ζαχαροπλαστείο (07:00, 13:00, 19:00)</option>
-                            <option value="supermarket">🏪 Παντοπωλείο (09:00, 14:00, 18:00)</option>
-                            <option value="market">🛒 Σούπερ Μάρκετ (08:00, 14:00, 20:00)</option>
-                            <option value="fishmonger">🐟 Ψαράδικο (07:00, 13:00, 18:00)</option>
-                            <option value="cafe">☕ Καφέ (10:00, 15:00, 19:00)</option>
-                        </select>
+                        <label class="form-label">Όνομα Καταστήματος:</label>
+                        <input type="text" id="businessName" class="form-input" placeholder="π.χ. Κρεοπωλείο Γιάννη, Ζαχαροπλαστείο Marina" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
                     </div>
 
-                    <!-- Display Recording Times -->
-                    <div id="recordingTimesDisplay" style="display:none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                        <p style="font-weight: 600; margin-bottom: 10px;">Ώρες καταγραφής θερμοκρασίας:</p>
-                        <div id="recordingTimesList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px;">
+                    <!-- Recording Times Selection -->
+                    <div class="form-group" style="margin-top: 25px;">
+                        <label class="form-label">🕐 Ώρες Καταγραφής Θερμοκρασίας:</label>
+                        <p style="color: #666; font-size: 0.85rem; margin-bottom: 15px;">Επιλέξτε τις ώρες που θέλετε να γίνονται αυτόματες καταγραφές</p>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="06:00"> 06:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="07:00"> 07:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="08:00"> 08:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="09:00"> 09:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="10:00"> 10:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="11:00"> 11:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="12:00"> 12:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="13:00"> 13:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="14:00"> 14:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="15:00"> 15:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="16:00"> 16:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="17:00"> 17:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="18:00"> 18:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="19:00"> 19:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="20:00"> 20:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="checkbox" class="recordingTimeCheckbox" value="21:00"> 21:00
+                            </label>
                         </div>
-                        <button type="button" class="btn btn-secondary" onclick="openCustomBusinessModal()" style="margin-top: 15px; width: 100%;">⚙️ ΔΙΑΜΟΡΦΩΣΗ ΩΡΩΝ</button>
                     </div>
 
-                    <!-- Add Custom Business Type -->
-                    <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e9ecef;">
-                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Δεν βρίσκετε τον τύπο σας;</p>
-                        <button type="button" class="btn btn-primary" onclick="openCreateCustomBusinessModal()" style="width: 100%;">+ ΠΡΟΣΘΗΚΗ ΝΕΑΣ ΕΠΙΧΕΙΡΗΣΗΣ</button>
+                    <!-- Cleaning Times Selection -->
+                    <div class="form-group" style="margin-top: 25px;">
+                        <label class="form-label">🧹 Ώρες Καθαρισμού:</label>
+                        <p style="color: #666; font-size: 0.85rem; margin-bottom: 15px;">Επιλέξτε την ώρα καθαρισμού (συνήθως ένα χρόνο)</p>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="06:00"> 06:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="07:00"> 07:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="08:00"> 08:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="09:00"> 09:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="10:00"> 10:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="14:00"> 14:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="15:00"> 15:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="18:00"> 18:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="19:00"> 19:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="20:00"> 20:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="21:00"> 21:00
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; cursor: pointer;">
+                                <input type="radio" name="cleaningTime" class="cleaningTimeRadio" value="22:00"> 22:00
+                            </label>
+                        </div>
                     </div>
                     
                     <div style="margin-top: 30px; display: flex; gap: 10px;">
                         <button class="btn btn-secondary" onclick="nextStep(1)">← ΠΙΣΩ</button>
-                        <button class="btn btn-primary" onclick="nextStep(3)" style="flex: 1;">ΣΥΝΕΧΕΙΑ →</button>
+                        <button class="btn btn-primary" onclick="saveStep2Settings(); nextStep(3)" style="flex: 1;">ΣΥΝΕΧΕΙΑ →</button>
                     </div>
                 </div>
                 
@@ -1532,28 +1601,19 @@
             '2025-10-28', '2025-12-25', '2025-12-26'
         ];
 
-        // Built-in business types with recording times
-        const BUSINESS_TYPES = [
-            { id: 'butcher', name: 'Κρεοπωλείο', recordingTimes: ['08:00', '14:00', '17:00'], isCustom: false },
-            { id: 'restaurant', name: 'Εστιατόριο', recordingTimes: ['11:00', '15:00', '20:00'], isCustom: false },
-            { id: 'bakery', name: 'Αρτοποιείο', recordingTimes: ['06:00', '12:00', '18:00'], isCustom: false },
-            { id: 'pastry', name: 'Ζαχαροπλαστείο', recordingTimes: ['07:00', '13:00', '19:00'], isCustom: false },
-            { id: 'supermarket', name: 'Παντοπωλείο', recordingTimes: ['09:00', '14:00', '18:00'], isCustom: false },
-            { id: 'market', name: 'Σούπερ Μάρκετ', recordingTimes: ['08:00', '14:00', '20:00'], isCustom: false },
-            { id: 'fishmonger', name: 'Ψαράδικο', recordingTimes: ['07:00', '13:00', '18:00'], isCustom: false },
-            { id: 'cafe', name: 'Καφέ', recordingTimes: ['10:00', '15:00', '19:00'], isCustom: false }
-        ];
+        // ✅ v8.18: No built-in business types - users define everything
+        const BUSINESS_TYPES = [];
 
         let systemData = {
             license: null,
             businessTypes: [...BUSINESS_TYPES],
             businessInfo: {
-                typeId: 'butcher',
+                typeId: '',
                 name: '',
                 phone: '',
                 address: '',
-                type: 'butcher',
-                recordingTimes: ['08:00', '14:00', '17:00'],
+                type: '',
+                recordingTimes: [],
                 years: 0,
                 workingDays: [],
                 // v7.3 additions
@@ -2492,6 +2552,12 @@
             console.log('   Setup Complete:', systemData.setupComplete ? '✅ YES' : '❌ NO');
             console.log('   Equipment:', systemData.equipment?.length || 0, 'items');
             
+            // ✅ CRITICAL DEBUG: Recording times at startup
+            console.log('🔍 [CRITICAL] Recording times at startup:');
+            console.log('   businessInfo.recordingTimes:', systemData.businessInfo?.recordingTimes);
+            console.log('   businessInfo.type:', systemData.businessInfo?.type);
+            console.log('   cleaningSettings.autoTickHours:', systemData.cleaningSettings?.autoTickHours);
+            
             // Hide everything first
             hideAllScreens();
             
@@ -2820,6 +2886,9 @@
                 return;
             }
             
+            // ✅ DEBUG: Log current state before changes
+            console.log('🔍 [populateBusinessTypeDropdown] Current recordingTimes BEFORE:', systemData.businessInfo.recordingTimes);
+            
             // Keep existing options (hardcoded ones) and add custom types
             // Get all current options except the first placeholder
             const existingOptions = Array.from(select.options).slice(1);
@@ -2838,11 +2907,18 @@
                 select.appendChild(option);
             });
             
+            // ✅ DEBUG: Log after changes
+            console.log('🔍 [populateBusinessTypeDropdown] Recording times AFTER:', systemData.businessInfo.recordingTimes);
             console.log('✓ Business types dropdown populated:', systemData.businessTypes.length, 'types');
+            console.log('✓ Custom types:', customTypes.length);
         }
 
         function onBusinessTypeChange() {
             const selected = document.getElementById('businessTypeSelect').value;
+            
+            // ✅ CRITICAL DEBUG
+            console.log('🔍 [onBusinessTypeChange] Selected type:', selected);
+            console.log('🔍 [onBusinessTypeChange] BEFORE - recordingTimes:', systemData.businessInfo.recordingTimes);
             
             if (!selected) {
                 document.getElementById('recordingTimesDisplay').style.display = 'none';
@@ -2856,7 +2932,16 @@
                 systemData.businessInfo.type = businessType.id;
                 systemData.businessInfo.recordingTimes = [...businessType.recordingTimes];
                 displayRecordingTimes(businessType.recordingTimes);
+                
+                // ✅ CRITICAL DEBUG
                 console.log('✓ Selected:', businessType.name, 'Times:', businessType.recordingTimes);
+                console.log('✓ Saved to systemData.businessInfo.recordingTimes:', systemData.businessInfo.recordingTimes);
+                console.log('✓ Is custom?', businessType.isCustom);
+                
+                saveData(); // Make sure it's saved!
+                
+                // ✅ Verify after save
+                console.log('✓ AFTER save - recordingTimes:', systemData.businessInfo.recordingTimes);
             }
         }
 
@@ -2953,110 +3038,60 @@
             console.log('✓ Recording times updated:', times);
         }
 
-        function openCreateCustomBusinessModal() {
-            document.getElementById('customBusinessName').value = '';
+        // ✅ v8.18: Save Step 2 settings (name + custom recording times + cleaning times)
+        function saveStep2Settings() {
+            console.log('💾 [v8.18] Saving Step 2 settings...');
             
-            // Ensure time options are generated
-            if (!window.timeOptionsHTML) {
-                generateTimeOptions();
+            // Get business name
+            const businessName = document.getElementById('businessName').value.trim();
+            if (!businessName) {
+                alert('⚠️ Παρακαλώ εισάγετε όνομα καταστήματος');
+                return false;
             }
             
-            const container = document.getElementById('createRecordingTimesContainer');
-            container.innerHTML = `
-                <div style="display: grid; grid-template-columns: 1fr 30px; gap: 10px; align-items: center;">
-                    <select class="form-select customNewTime">
-                        <option value="">-- Επιλέξτε ώρα --</option>
-                        ${window.timeOptionsHTML}
-                    </select>
-                    <button type="button" class="btn btn-danger" onclick="removeNewTimeField(this)">✕</button>
-                </div>
-            `;
-            document.getElementById('createCustomBusinessModal').classList.add('active');
-            console.log('✓ Create custom business modal opened');
-        }
-
-        function closeCreateCustomBusinessModal() {
-            document.getElementById('createCustomBusinessModal').classList.remove('active');
-        }
-
-        function addNewTimeField() {
-            const container = document.getElementById('createRecordingTimesContainer');
-            if (container.children.length >= 6) {
-                alert('Μέγιστο 6 ώρες καταγραφής');
-                return;
+            // Get selected recording times
+            const recordingTimeCheckboxes = Array.from(document.querySelectorAll('.recordingTimeCheckbox:checked'));
+            const recordingTimes = recordingTimeCheckboxes.map(cb => cb.value).sort();
+            
+            if (recordingTimes.length === 0) {
+                alert('⚠️ Παρακαλώ επιλέξτε τουλάχιστον μία ώρα καταγραφής');
+                return false;
             }
             
-            const div = document.createElement('div');
-            div.style.display = 'grid';
-            div.style.gridTemplateColumns = '1fr 30px';
-            div.style.gap = '10px';
-            div.style.alignItems = 'center';
-            div.innerHTML = `
-                <select class="form-select customNewTime">
-                    <option value="">-- Επιλέξτε ώρα --</option>
-                    ${window.timeOptionsHTML}
-                </select>
-                <button type="button" class="btn btn-danger" onclick="removeNewTimeField(this)">✕</button>
-            `;
-            container.appendChild(div);
-        }
-
-        function removeNewTimeField(btn) {
-            btn.parentElement.remove();
-        }
-
-        function createCustomBusiness() {
-            console.log('→ Creating custom business...');
+            // Get selected cleaning time
+            const cleaningTimeRadio = document.querySelector('input[name="cleaningTime"]:checked');
+            const cleaningTime = cleaningTimeRadio ? cleaningTimeRadio.value : null;
             
-            const name = document.getElementById('customBusinessName').value.trim();
-            console.log('  Name:', name);
-            
-            const times = Array.from(document.querySelectorAll('.customNewTime'))
-                .map(input => input.value)
-                .filter(v => v !== '');
-            
-            console.log('  Times found:', times);
-            
-            if (!name) {
-                alert('Παρακαλώ εισάγετε όνομα επιχείρησης');
-                return;
+            if (!cleaningTime) {
+                alert('⚠️ Παρακαλώ επιλέξτε ώρα καθαρισμού');
+                return false;
             }
             
-            if (times.length === 0) {
-                alert('Παρακαλώ προσθέστε τουλάχιστον μία ώρα');
-                return;
+            // ✅ SAVE TO systemData
+            systemData.businessInfo.type = 'custom';
+            systemData.businessInfo.typeId = 'custom_' + Date.now();
+            systemData.businessInfo.name = businessName;
+            systemData.businessInfo.recordingTimes = [...recordingTimes];
+            
+            // Initialize cleaning settings if needed
+            if (!systemData.cleaningSettings) {
+                systemData.cleaningSettings = {
+                    fields: ['Γενικός Καθαρισμός', 'Απολύμανση', 'Βιτρίνες', 'Εργαλεία'],
+                    autoTickHours: []
+                };
             }
+            systemData.cleaningSettings.autoTickHours = [cleaningTime];
             
-            times.sort();
-            const customId = 'custom_' + Date.now();
-            
-            const newType = {
-                id: customId,
-                name: name,
-                recordingTimes: times,
-                isCustom: true
-            };
-            
-            console.log('  New type:', newType);
-            
-            systemData.businessTypes.push(newType);
-            systemData.businessInfo.typeId = customId;
-            systemData.businessInfo.type = customId;
-            systemData.businessInfo.recordingTimes = [...times];
-            
-            console.log('✓ Custom business created:', name, times);
-            console.log('  Total business types:', systemData.businessTypes.length);
-            
-            populateBusinessTypeDropdown();
-            document.getElementById('businessTypeSelect').value = customId;
-            displayRecordingTimes(times);
-            closeCreateCustomBusinessModal();
+            console.log('✅ Step 2 settings saved:');
+            console.log('   Name:', businessName);
+            console.log('   Recording times:', recordingTimes);
+            console.log('   Cleaning time:', cleaningTime);
             
             saveData();
-            
-            alert('✓ Επιχείρηση δημιουργήθηκε: ' + name);
+            return true;
         }
-
+        
+        
         // Setup Wizard
         function nextStep(step) {
             if (step === 2 && !systemData.businessTypes) {
@@ -3441,6 +3476,11 @@
     // Use recording times from business type configuration
     const recordingTimes = systemData.businessInfo.recordingTimes || ['08:00', '14:00', '17:00'];
     const today = new Date();
+    
+    // ✅ CRITICAL DEBUG LOGS
+    console.log('🔍 [checkAndRecord] RECORDING TIMES BEING USED:', recordingTimes);
+    console.log('🔍 [checkAndRecord] Business Type:', systemData.businessInfo.type);
+    console.log('🔍 [checkAndRecord] businessInfo.recordingTimes:', systemData.businessInfo.recordingTimes);
 
     // Συμπλήρωση χαμένων καταγραφών (τελευταίες 90 μέρες)
     for (let i = 1; i <= 90; i++) {
@@ -3489,7 +3529,7 @@
         
         if (!cleanExists) {
             // ✅ v8.15-FIXED: Use scheduled cleaning times, NOT temperature times!
-            const cleaningSchedule = systemData.cleaningSettings?.scheduledTimes || [];
+            const cleaningSchedule = systemData.cleaningSettings?.autoTickHours || [];
             const cleaningTime = cleaningSchedule.length > 0 ? cleaningSchedule[0] : null;
             
             // Only create if cleaning time is actually scheduled
@@ -3560,7 +3600,11 @@
     });
     
     // Καθαρισμός - ✅ v8.15-FIXED: Use ONLY scheduled cleaning times!
-    const cleaningSchedule = systemData.cleaningSettings?.scheduledTimes || [];
+    const cleaningSchedule = systemData.cleaningSettings?.autoTickHours || [];
+    
+    // ✅ CRITICAL DEBUG LOGS FOR CLEANING
+    console.log('🔍 [checkAndRecord] CLEANING TIMES BEING USED:', cleaningSchedule);
+    console.log('🔍 [checkAndRecord] cleaningSettings:', systemData.cleaningSettings);
     
     // Process EACH scheduled cleaning time (not just first temperature time!)
     for (const cleaningTime of cleaningSchedule) {
@@ -3785,8 +3829,8 @@ if (temp >= -22 && temp <= -18) {
                 
                 return `
                     <tr class="cleaning-row">
-                        <td class="cleaning-cell-date" style="min-width: 140px; white-space: nowrap;">${c.date}</td>
-                        <td class="cleaning-cell-time" style="min-width: 60px; white-space: nowrap;">${c.time}</td>
+                        <td class="cleaning-cell-date">${c.date}</td>
+                        <td class="cleaning-cell-time">${c.time}</td>
                         <td class="cleaning-fields-container">
                             <div class="cleaning-fields-grid">
                                 ${fieldsHTML}
@@ -5097,6 +5141,11 @@ if (temp >= -22 && temp <= -18) {
                     // Parse the data
                     systemData = JSON.parse(dataString);
                     console.log('✅ [v8.4] Data loaded successfully');
+                    
+                    // ✅ CRITICAL DEBUG: Log loaded recording times
+                    console.log('🔍 [loadData] Loaded businessInfo.recordingTimes:', systemData.businessInfo?.recordingTimes);
+                    console.log('🔍 [loadData] Loaded businessInfo.type:', systemData.businessInfo?.type);
+                    console.log('🔍 [loadData] Loaded cleaningSettings.autoTickHours:', systemData.cleaningSettings?.autoTickHours);
                     
                     // 🔧 v8.15 MIGRATION: Fix old auto-created records with broken field keys
                     migrateCleaningRecords();
