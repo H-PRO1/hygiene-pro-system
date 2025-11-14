@@ -1,0 +1,11 @@
+{
+    "version": "8.20",
+    "releaseDate": "2025-11-14",
+    "changelog": "Backup sorting (newest first) + Auto-download functionality",
+    "changes": [
+        "✅ Backup data sorted by date DESC (newest first)",
+        "✅ Auto-backup downloads files automatically every 12h/24h",
+        "✅ Manual backup now shows latest data first",
+        "✅ File naming with timestamp for easy identification"
+    ]
+}
