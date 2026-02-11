@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v9 - Σύστημα Ελέγχου Υγιεινής (Multi-Store)</title>
+    <title>Hygiene Pro v10.0.6 - Σύστημα Ελέγχου Υγιεινής (Multi-Store)</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -2086,13 +2086,14 @@
         let customerDocId = null;
 
         // Firebase Config
+        // 🔧 v10.0.6: ΔΙΟΡΘΩΜΕΝΟ Firebase Config (ίδιο με CRM Manager)
         const firebaseConfig = {
-            apiKey: "AIzaSyCTNhBokqTimxjy7nqBCT_MFudXEkRm5lY",
+            apiKey: "AIzaSyButfpT7AZTJZ8vXs8pkvSwwPFOemMadTE",
             authDomain: "hygiene-pro-crm.firebaseapp.com",
             projectId: "hygiene-pro-crm",
             storageBucket: "hygiene-pro-crm.firebasestorage.app",
-            messagingSenderId: "365aborede56teleio0524073",
-            appId: "1:365008560524073:web:d8b7a1f1d4e5f6g7h8i9j0"
+            messagingSenderId: "938318779496",
+            appId: "1:938318779496:web:c39b3aa23ba40fc75417dd"
         };
 
         // Initialize Firebase
@@ -2261,8 +2262,16 @@
         }
 
         // Save data to Firebase (BACKUP ONLY - does NOT affect local data)
+        // 🛡️ v10.0.6: ΠΡΟΣΤΑΣΙΑ - ΔΕΝ κάνει save αν τα δεδομένα είναι κενά!
         async function saveToFirebase() {
             if (!db || !customerDocId) return;
+            
+            // 🛡️ v10.0.6 PROTECTION: ΠΟΤΕ μην κάνεις save κενά δεδομένα!
+            // Αυτό προστατεύει από το να αντικατασταθούν πραγματικά δεδομένα με ΤΙΠΟΤΑ
+            if (!systemData.equipment || systemData.equipment.length === 0) {
+                console.log('⚠️ [saveToFirebase] BLOCKED - equipment is empty! Will not overwrite cloud data.');
+                return;
+            }
             
             try {
                 const firebaseData = {
@@ -3615,12 +3624,16 @@
                 // Check if customer still exists in CRM
                 const existsInCRM = await checkLicenseInCRM(systemData.license.key);
                 if (!existsInCRM) {
-                    console.log('❌ Customer removed from CRM - deactivating');
-                    delete systemData.license;
-                    systemData.setupComplete = false;
-                    saveData();
+                    // 🛡️ v10.0.6 PROTECTION: ΔΕΝ διαγράφουμε δεδομένα - μόνο κλείδωμα!
+                    console.log('⚠️ Customer not found in CRM - LOCKING (NOT deleting data!)');
+                    // ΔΕΝ κάνουμε: delete systemData.license;
+                    // ΔΕΝ κάνουμε: systemData.setupComplete = false;
+                    // ΔΕΝ κάνουμε: saveData();
                     document.getElementById('licenseActivation').classList.add('active');
-                    showAlert('❌ Άδεια Ακυρώθηκε', 'Η άδειά σας έχει ακυρωθεί. Επικοινωνήστε με τον πάροχο.', 'error');
+                    showAlert('⚠️ Πρόβλημα Άδειας', 
+                        'Δεν βρέθηκε η άδειά σας στο σύστημα.\n\n' +
+                        'Επικοινωνήστε: hygieneprohellas@gmail.com\n\n' +
+                        '⚠️ Τα δεδομένα σας ΔΕΝ έχουν διαγραφεί.', 'warning');
                     return;
                 }
                 
@@ -3698,21 +3711,29 @@
                             updateLicenseDisplay();
                             // Fall through to CASE 3+ checks
                         } else {
-                            // No renewal found - lock as before
-                            delete systemData.license;
-                            systemData.setupComplete = false;
-                            saveData();
+                            // 🛡️ v10.0.6 PROTECTION: ΔΕΝ διαγράφουμε - μόνο κλείδωμα!
+                            console.log('⚠️ License expired, no renewal - LOCKING (NOT deleting data!)');
+                            // ΔΕΝ κάνουμε: delete systemData.license;
+                            // ΔΕΝ κάνουμε: systemData.setupComplete = false;
+                            // ΔΕΝ κάνουμε: saveData();
                             document.getElementById('licenseActivation').classList.add('active');
-                            showAlert('❌ Άδεια Λήξαντα', 'Επικοινωνήστε για ανανέωση', 'error');
+                            showAlert('⚠️ Άδεια Έληξε', 
+                                'Η άδειά σας έχει λήξει.\n\n' +
+                                'Επικοινωνήστε για ανανέωση:\nhygieneprohellas@gmail.com\n\n' +
+                                '⚠️ Τα δεδομένα σας ΔΕΝ έχουν διαγραφεί.', 'warning');
                             return;
                         }
                     } else {
-                        // No Firebase - lock as before
-                        delete systemData.license;
-                        systemData.setupComplete = false;
-                        saveData();
+                        // 🛡️ v10.0.6 PROTECTION: No Firebase - ΔΕΝ διαγράφουμε!
+                        console.log('⚠️ License expired, no Firebase - LOCKING (NOT deleting data!)');
+                        // ΔΕΝ κάνουμε: delete systemData.license;
+                        // ΔΕΝ κάνουμε: systemData.setupComplete = false;
+                        // ΔΕΝ κάνουμε: saveData();
                         document.getElementById('licenseActivation').classList.add('active');
-                        showAlert('❌ Άδεια Λήξαντα', 'Επικοινωνήστε για ανανέωση', 'error');
+                        showAlert('⚠️ Άδεια Έληξε', 
+                            'Η άδειά σας έχει λήξει.\n\n' +
+                            'Επικοινωνήστε για ανανέωση:\nhygieneprohellas@gmail.com\n\n' +
+                            '⚠️ Τα δεδομένα σας ΔΕΝ έχουν διαγραφεί.', 'warning');
                         return;
                     }
                 }
@@ -9343,7 +9364,7 @@ if (temp >= minTemp && temp <= maxTemp) {
                 
                 <h3 style="color: #667eea; margin-top: 25px;">9. Επικοινωνία</h3>
                 <p>Για ερωτήσεις σχετικά με τους όρους χρήσης:<br>
-                <strong>Email:</strong> hygieneprohellas@gmail.com<br>
+                <strong>Email:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b8d0c1dfd1ddd6ddc8cad7d0ddd4d4d9cbf8dfd5d9d1d496dbd7d5">[email&#160;protected]</a><br>
                 <strong>Διεύθυνση:</strong> Καπετάν Γκόνη 13, Σταυρούπολη, Θεσσαλονίκη</p>
             </div>
             
@@ -9367,7 +9388,7 @@ if (temp >= minTemp && temp <= maxTemp) {
                 <h3 style="color: #28a745; margin-top: 25px;">1. Υπεύθυνος Επεξεργασίας</h3>
                 <p><strong>ΚΑΜΠΑΚΟΣ Σ. - ΚΑΡΑΒΑΡΑ Α. Ο.Ε.</strong><br>
                 Καπετάν Γκόνη 13, Σταυρούπολη, Θεσσαλονίκη<br>
-                Email: hygieneprohellas@gmail.com</p>
+                Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cea6b7a9a7aba0abbebca1a6aba2a2afbd8ea9a3afa7a2e0ada1a3">[email&#160;protected]</a></p>
                 
                 <h3 style="color: #28a745; margin-top: 25px;">2. Δεδομένα που Συλλέγουμε</h3>
                 <p>Συλλέγουμε τα ακόλουθα δεδομένα που παρέχετε κατά τη χρήση της υπηρεσίας:</p>
@@ -9407,7 +9428,7 @@ if (temp >= minTemp && temp <= maxTemp) {
                     <li><strong>Φορητότητα:</strong> Να λάβετε τα δεδομένα σας σε αναγνώσιμη μορφή</li>
                     <li><strong>Εναντίωση:</strong> Να αντιταχθείτε στην επεξεργασία</li>
                 </ul>
-                <p>Για άσκηση των δικαιωμάτων σας, επικοινωνήστε μαζί μας στο: hygieneprohellas@gmail.com</p>
+                <p>Για άσκηση των δικαιωμάτων σας, επικοινωνήστε μαζί μας στο: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ed85948a848883889d9f82858881818c9ead8a808c8481c38e8280">[email&#160;protected]</a></p>
                 
                 <h3 style="color: #28a745; margin-top: 25px;">7. Κοινοποίηση σε Τρίτους</h3>
                 <p><strong>Δεν πωλούμε, ενοικιάζουμε ή κοινοποιούμε</strong> τα δεδομένα σας σε τρίτους για εμπορικούς σκοπούς. Μπορεί να κοινοποιήσουμε δεδομένα μόνο:</p>
@@ -9424,7 +9445,7 @@ if (temp >= minTemp && temp <= maxTemp) {
                 
                 <h3 style="color: #28a745; margin-top: 25px;">10. Επικοινωνία</h3>
                 <p>Για ερωτήσεις σχετικά με την προστασία δεδομένων:<br>
-                <strong>Email:</strong> hygieneprohellas@gmail.com<br>
+                <strong>Email:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7a12031d131f141f0a0815121f16161b093a1d171b131654191517">[email&#160;protected]</a><br>
                 <strong>Διεύθυνση:</strong> Καπετάν Γκόνη 13, Σταυρούπολη, Θεσσαλονίκη</p>
             </div>
             
@@ -9468,16 +9489,6 @@ if (temp >= minTemp && temp <= maxTemp) {
         </div>
     </footer>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // Update Firebase status indicator
-        function updateFirebaseStatus() {
-            const indicator = document.getElementById('firebaseIndicator');
-            if (indicator) {
-                if (firebaseReady && customerDocId) {
-                    indicator.innerHTML = '☁️ <span style="color: #4CAF50;">Firebase: Συνδεδεμένο</span>';
-                } else if (firebaseReady) {
-                    indicator.innerHTML = '☁️ <span style="color: #ffa500;">Firebase: Έτοιμο</span>';
-                } else {
-                    indicator.innerHTML = '☁️ <span style="color: #888;">Firebase: Offline</span>';
-                }
-      
+        
