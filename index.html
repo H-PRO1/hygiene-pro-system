@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v10.0.6 - Σύστημα Ελέγχου Υγιεινής (Multi-Store)</title>
+    <title>Hygiene Pro v10.0.7 - Σύστημα Ελέγχου Υγιεινής (Multi-Store)</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -5662,8 +5662,8 @@
     console.log('🔍 [checkAndRecord] Business Type:', systemData.businessInfo.type);
     console.log('🔍 [checkAndRecord] businessInfo.recordingTimes:', systemData.businessInfo.recordingTimes);
 
-    // Συμπλήρωση χαμένων καταγραφών (τελευταίες 90 μέρες)
-    for (let i = 1; i <= 90; i++) {
+    // Συμπλήρωση χαμένων καταγραφών (τελευταίες 365 μέρες) - v10.0.7
+    for (let i = 1; i <= 365; i++) {
         const pastDate = new Date();
         pastDate.setDate(today.getDate() - i);
         const pastDateStr = formatDate(pastDate);
