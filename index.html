@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v10.0.7 - Σύστημα Ελέγχου Υγιεινής (Multi-Store)</title>
+    <title>Hygiene Pro v10.0.8 - Σύστημα Ελέγχου Υγιεινής (Multi-Store)</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -3581,10 +3581,15 @@
                         // Load the store's specific data
                         loadStoreData(multiStoreConfig.currentStoreIndex);
                     } else {
-                        // NO store data - this is a NEW store that needs setup
-                        // CRITICAL: Override whatever setupComplete was loaded from main hygienePro
-                        console.log('🆕 [initMultiStoreFromLicense] No store data - forcing setupComplete = false');
-                        systemData.setupComplete = false;
+                        // 🛡️ v10.0.8 PROTECTION: Έλεγξε αν υπάρχουν ΗΔΗ δεδομένα στο systemData
+                        // Αν ναι, ΜΗΝ κάνεις setupComplete = false!
+                        if (systemData.equipment && systemData.equipment.length > 0) {
+                            console.log('🛡️ [initMultiStoreFromLicense] Equipment exists! NOT resetting setupComplete.');
+                        } else {
+                            // NO store data AND no equipment - this is a NEW store that needs setup
+                            console.log('🆕 [initMultiStoreFromLicense] No store data - forcing setupComplete = false');
+                            systemData.setupComplete = false;
+                        }
                     }
                 }
             }
@@ -4208,6 +4213,20 @@
         }
         
         function resetStoreData() {
+            // 🛡️ v10.0.8 PROTECTION: Έλεγξε αν υπάρχουν ΗΔΗ δεδομένα!
+            // Αν ναι, ΜΗΝ τα διαγράψεις!
+            if (systemData.equipment && systemData.equipment.length > 0) {
+                console.log('🛡️ [resetStoreData] BLOCKED! Equipment exists (' + systemData.equipment.length + ' items). NOT resetting!');
+                return; // ΔΕΝ διαγράφουμε!
+            }
+            
+            if (systemData.temperatures && systemData.temperatures.length > 0) {
+                console.log('🛡️ [resetStoreData] BLOCKED! Temperatures exist (' + systemData.temperatures.length + ' records). NOT resetting!');
+                return; // ΔΕΝ διαγράφουμε!
+            }
+            
+            console.log('🆕 [resetStoreData] No existing data - safe to reset for new store');
+            
             // Reset data but keep license and multi-store config
             const license = systemData.license;
             
@@ -7823,9 +7842,16 @@ if (temp >= minTemp && temp <= maxTemp) {
                     // v7.4: Validate loaded license
                     if (systemData.license) {
                         if (!systemData.license.key || !systemData.license.businessName) {
-                            console.warn('Invalid license data in storage - removing');
-                            systemData.license = null;
-                            systemData.setupComplete = false;
+                            console.warn('Invalid license data in storage');
+                            // 🛡️ v10.0.8 PROTECTION: ΔΕΝ κάνουμε setupComplete = false αν υπάρχουν δεδομένα!
+                            if (systemData.equipment && systemData.equipment.length > 0) {
+                                console.log('🛡️ License invalid but equipment exists - NOT resetting setupComplete!');
+                                // Απλά αφήνουμε license = null, ο χρήστης θα πρέπει να ξαναβάλει κωδικό
+                                // αλλά ΔΕΝ χάνει τα δεδομένα του!
+                            } else {
+                                systemData.license = null;
+                                systemData.setupComplete = false;
+                            }
                         }
                         // Check expiry on load - DON'T remove, let checkSystemState handle it
                         // (checkSystemState will check Firebase for renewal first)
@@ -7854,10 +7880,10 @@ if (temp >= minTemp && temp <= maxTemp) {
                 }
             } catch (e) {
                 console.error('❌ Error loading data:', e);
-                // Critical error - reset to defaults and clear storage
-                localStorage.removeItem('hygienePro');
+                // 🛡️ v10.0.8 PROTECTION: ΔΕΝ διαγράφουμε δεδομένα σε error!
+                // Απλά συνεχίζουμε με defaults για businessTypes
                 systemData.businessTypes = [...BUSINESS_TYPES];
-                console.log('⚠️ Storage cleared due to error. Fresh start.');
+                console.log('⚠️ Error loading - but NOT deleting data! Continuing with defaults.');
             }
         }
 
