@@ -8206,9 +8206,16 @@ if (temp >= minTemp && temp <= maxTemp) {
                         .map(k => k.replace('field_', '').replace(/_/g, ' '))
                         .join(', ');
 
-                    // Get product and responsible from first completed task
-                    const firstCompletedKey = fieldKeys.find(k => record[k] === '✓' || record[k] === true);
-                    const product = firstCompletedKey ? (record[firstCompletedKey + '_product'] || '-') : '-';
+                    // Get ALL products from completed tasks (not just first)
+                    const completedKeys = fieldKeys.filter(k => record[k] === '✓' || record[k] === true);
+                    const allProducts = [...new Set(completedKeys
+                        .map(k => record[k + '_product'])
+                        .filter(p => p && p !== '-' && p !== '')
+                    )];
+                    const product = allProducts.length > 0 ? allProducts.join(', ') : '-';
+
+                    // Get responsible from first completed task
+                    const firstCompletedKey = completedKeys[0];
                     const responsible = firstCompletedKey ? (record[firstCompletedKey + '_responsible'] || record.responsible || '-') : '-';
 
                     const rowBg = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
@@ -8401,9 +8408,16 @@ if (temp >= minTemp && temp <= maxTemp) {
                         .map(k => k.replace('field_', '').replace(/_/g, ' '))
                         .join(', ');
 
-                    // Get product and responsible from first completed task
-                    const firstCompletedKey = fieldKeys.find(k => record[k] === '✓' || record[k] === true);
-                    const product = firstCompletedKey ? (record[firstCompletedKey + '_product'] || '-') : '-';
+                    // Get ALL products from completed tasks (not just first)
+                    const completedKeys = fieldKeys.filter(k => record[k] === '✓' || record[k] === true);
+                    const allProducts = [...new Set(completedKeys
+                        .map(k => record[k + '_product'])
+                        .filter(p => p && p !== '-' && p !== '')
+                    )];
+                    const product = allProducts.length > 0 ? allProducts.join(', ') : '-';
+
+                    // Get responsible from first completed task
+                    const firstCompletedKey = completedKeys[0];
                     const responsible = firstCompletedKey ? (record[firstCompletedKey + '_responsible'] || record.responsible || '-') : '-';
 
                     return {
