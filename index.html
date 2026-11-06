@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v10.0.8 - Σύστημα Ελέγχου Υγιεινής (Multi-Store)</title>
+    <title>Hygiene Pro v10.2.0 - Σύστημα Ελέγχου Υγιεινής</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -929,7 +932,7 @@
         <div class="header">
             
         <div class="header-logo" style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIEJsYWNrIGJhY2tncm91bmQgLS0+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIGZpbGw9IiMwMDAwMDAiLz4KICAKICA8IS0tIFdhdGVyIGRyb3Agb3V0bGluZSAoc2lsdmVyKSAtLT4KICA8cGF0aCBkPSJNIDI1NiA1MCAKICAgICAgICAgICBDIDI1NiA1MCwgMzgwIDE4MCwgMzgwIDI5MAogICAgICAgICAgIEMgMzgwIDM2MCwgMzIwIDQyMCwgMjU2IDQyMAogICAgICAgICAgIEMgMTkyIDQyMCwgMTMyIDM2MCwgMTMyIDI5MAogICAgICAgICAgIEMgMTMyIDE4MCwgMjU2IDUwLCAyNTYgNTAgWiIKICAgICAgICBmaWxsPSJub25lIgogICAgICAgIHN0cm9rZT0iI0MwQzBDMCIKICAgICAgICBzdHJva2Utd2lkdGg9IjEwIgogICAgICAgIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICAKICA8IS0tIEgtUFJPIHRleHQgKHNpbHZlciwgYm9sZCkgLS0+CiAgPHRleHQgeD0iMjU2IiB5PSIyODAiIAogICAgICAgIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgCiAgICAgICAgZm9udC1zaXplPSI3MiIgCiAgICAgICAgZm9udC13ZWlnaHQ9ImJvbGQiCiAgICAgICAgZmlsbD0iI0MwQzBDMCIgCiAgICAgICAgdGV4dC1hbmNob3I9Im1pZGRsZSIKICAgICAgICBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5ILVBSTzwvdGV4dD4KICAKICA8IS0tIFRhZ2xpbmUgLS0+CiAgPHRleHQgeD0iMjU2IiB5PSIzMzAiIAogICAgICAgIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgCiAgICAgICAgZm9udC1zaXplPSIxOCIgCiAgICAgICAgZmlsbD0iI0MwQzBDMCIgCiAgICAgICAgdGV4dC1hbmNob3I9Im1pZGRsZSIKICAgICAgICBvcGFjaXR5PSIwLjkiPkhZR0lFTkUgU1lTVEVNPC90ZXh0Pgo8L3N2Zz4=" alt="H-PRO Logo" style="width: 50px; height: 50px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
+            <img id="logoImage" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIEJsYWNrIGJhY2tncm91bmQgLS0+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIGZpbGw9IiMwMDAwMDAiLz4KICAKICA8IS0tIFdhdGVyIGRyb3Agb3V0bGluZSAoc2lsdmVyKSAtLT4KICA8cGF0aCBkPSJNIDI1NiA1MCAKICAgICAgICAgICBDIDI1NiA1MCwgMzgwIDE4MCwgMzgwIDI5MAogICAgICAgICAgIEMgMzgwIDM2MCwgMzIwIDQyMCwgMjU2IDQyMAogICAgICAgICAgIEMgMTkyIDQyMCwgMTMyIDM2MCwgMTMyIDI5MAogICAgICAgICAgIEMgMTMyIDE4MCwgMjU2IDUwLCAyNTYgNTAgWiIKICAgICAgICBmaWxsPSJub25lIgogICAgICAgIHN0cm9rZT0iI0MwQzBDMCIKICAgICAgICBzdHJva2Utd2lkdGg9IjEwIgogICAgICAgIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICAKICA8IS0tIEgtUFJPIHRleHQgKHNpbHZlciwgYm9sZCkgLS0+CiAgPHRleHQgeD0iMjU2IiB5PSIyODAiIAogICAgICAgIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgCiAgICAgICAgZm9udC1zaXplPSI3MiIgCiAgICAgICAgZm9udC13ZWlnaHQ9ImJvbGQiCiAgICAgICAgZmlsbD0iI0MwQzBDMCIgCiAgICAgICAgdGV4dC1hbmNob3I9Im1pZGRsZSIKICAgICAgICBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5ILVBSTzwvdGV4dD4KICAKICA8IS0tIFRhZ2xpbmUgLS0+CiAgPHRleHQgeD0iMjU2IiB5PSIzMzAiIAogICAgICAgIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgCiAgICAgICAgZm9udC1zaXplPSIxOCIgCiAgICAgICAgZmlsbD0iI0MwQzBDMCIgCiAgICAgICAgdGV4dC1hbmNob3I9Im1pZGRsZSIKICAgICAgICBvcGFjaXR5PSIwLjkiPkhZR0lFTkUgU1lTVEVNPC90ZXh0Pgo8L3N2Zz4=" alt="H-PRO Logo" style="width: 50px; height: 50px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); cursor: pointer; user-select: none;">
             <div style="flex: 1;">
                 <h1 style="margin: 0; font-size: 2.2rem; font-weight: 700;">Hygiene Pro</h1>
                 <p style="margin: 0; font-size: 0.95rem; opacity: 0.9;">Σύστημα Ελέγχου Υγιεινής</p>
@@ -945,9 +948,9 @@
         </div>
 
         <!-- Navigation -->
-        <div class="nav">
+        <div class="nav" id="mainNav">
             <div class="nav-buttons">
-                <button class="nav-button active" onclick="showTab('dashboard')">ΑΡΧΙΚΗ</button>
+                <button class="nav-button" onclick="showTab('dashboard')">ΑΡΧΙΚΗ</button>
                 <button class="nav-button" onclick="showTab('temperatures')">ΘΕΡΜΟΚΡΑΣΙΕΣ</button>
                 <button class="nav-button" onclick="showTab('cleaning')">ΚΑΘΑΡΙΟΤΗΤΑ</button>
                 <button class="nav-button" onclick="showTab('equipment')">ΕΞΟΠΛΙΣΜΟΣ</button>
@@ -968,7 +971,7 @@
     <div class="modal" id="manualCleaningModal">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                <h2>Χειροκίνητη Καταχώρηση Καθαριότητας</h2>
+                <h2>Καταχώρηση Καθαριότητας</h2>
                 <button class="btn-close" onclick="closeManualCleaningModal()">&times;</button>
             </div>
             <div class="modal-body">
@@ -1350,8 +1353,71 @@
                     </div>
                 </div>
             </div>
+<!-- v10.2.0: DATA VIEW - New default screen (Excel-like) -->
+            <div class="tab-content active" id="dataView">
+                <!-- Sub-navigation tabs -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-primary" id="dataViewTempBtn" onclick="switchDataView('temperatures')" style="flex: 1;">ΘΕΡΜΟΚΡΑΣΙΕΣ</button>
+                    <button class="btn btn-secondary" id="dataViewCleanBtn" onclick="switchDataView('cleaning')" style="flex: 1;">ΚΑΘΑΡΙΟΤΗΤΑ</button>
+                </div>
+
+                <!-- HACCP Limits Info -->
+                <div id="dataViewHaccpInfo" style="background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>Όρια HACCP:</strong> Ψυγεία/Βιτρίνες: 0°C έως +4°C | Κατάψυξη: -18°C έως -22°C | Θερμός Εξοπλισμός: ≥63°C
+                </div>
+
+                <!-- Date Filters -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Από:</label>
+                            <input type="date" id="dataViewDateFrom" class="form-input">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Έως:</label>
+                            <input type="date" id="dataViewDateTo" class="form-input">
+                        </div>
+                        <button class="btn btn-primary" onclick="filterDataView()">ΦΙΛΤΡΑΡΙΣΜΑ</button>
+                        <button class="btn btn-secondary" onclick="showAllDataView()">ΕΜΦΑΝΙΣΗ ΟΛΩΝ</button>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-primary" id="dataViewAddBtn" onclick="openDataViewEntry()">+ ΚΑΤΑΧΩΡΗΣΗ</button>
+                    <div style="flex: 1;"></div>
+                    <button class="btn btn-success" onclick="exportDataViewExcel()">📥 EXCEL</button>
+                    <button class="btn btn-danger" onclick="exportDataViewPDF()">📄 PDF</button>
+                </div>
+
+                <!-- Data Table - Excel Style -->
+                <div class="table-container" style="border: 2px solid #217346; border-radius: 0; overflow-x: auto;">
+                    <table class="table" id="dataViewTable" style="border-collapse: collapse; width: 100%; font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 13px;">
+                        <thead id="dataViewTableHead" style="background: #217346; color: white;">
+                            <tr>
+                                <th style="border: 1px solid #185a34; padding: 10px 15px; font-weight: 600; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th>
+                                <th style="border: 1px solid #185a34; padding: 10px 15px; font-weight: 600; text-align: left;">ΩΡΑ</th>
+                                <th style="border: 1px solid #185a34; padding: 10px 15px; font-weight: 600; text-align: left;">ΕΞΟΠΛΙΣΜΟΣ</th>
+                                <th style="border: 1px solid #185a34; padding: 10px 15px; font-weight: 600; text-align: center;">ΘΕΡΜΟΚΡΑΣΙΑ</th>
+                                <th style="border: 1px solid #185a34; padding: 10px 15px; font-weight: 600; text-align: center;">ΚΑΤΑΣΤΑΣΗ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataViewTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: #6c757d; padding: 20px; border: 1px solid #d0d7de;">Φόρτωση δεδομένων...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination info -->
+                <div style="text-align: center; color: #6c757d; margin-top: 15px;" id="dataViewInfo">
+                    Εμφάνιση τελευταίων 6 μηνών
+                </div>
+            </div>
+
 <!-- Dashboard Tab -->
-            <div class="tab-content active" id="dashboard">
+            <div class="tab-content" id="dashboard">
                 <div class="clock-display">
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div>
@@ -1408,7 +1474,7 @@
                 <h2>Καταγραφές Θερμοκρασιών</h2>
                 
                 <div style="background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <strong>Όρια HACCP:</strong> Ψυγεία/Βιτρίνες: +1°C έως +4°C | Κατάψυξη: -18°C έως -22°C | Θερμός Εξοπλισμός: ≥63°C
+                    <strong>Όρια HACCP:</strong> Ψυγεία/Βιτρίνες: 0°C έως +4°C | Κατάψυξη: -18°C έως -22°C | Θερμός Εξοπλισμός: ≥63°C
                 </div>
 
                 <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
@@ -1428,7 +1494,7 @@
                     <div id="tempFilterInfo" style="margin-top: 10px; color: #667eea; font-weight: 500;"></div>
                 </div>
 
-                <button class="btn btn-primary" onclick="manualTemperatureEntry()" style="margin-bottom: 20px;">+ ΧΕΙΡΟΚΙΝΗΤΗ ΚΑΤΑΧΩΡΗΣΗ</button>
+                <button class="btn btn-primary" onclick="manualTemperatureEntry()" style="margin-bottom: 20px;">+ ΚΑΤΑΧΩΡΙΣΗ</button>
 
                 <div class="table-container">
                     <table class="table">
@@ -1454,7 +1520,7 @@
             <div class="tab-content" id="cleaning">
                 <h2>Καταγραφές Καθαριότητας</h2>
                 
-                <button class="btn btn-primary" onclick="manualCleaningEntry()" style="margin-bottom: 20px;">+ ΧΕΙΡΟΚΙΝΗΤΗ ΚΑΤΑΧΩΡΗΣΗ</button>
+                <button class="btn btn-primary" onclick="manualCleaningEntry()" style="margin-bottom: 20px;">+ ΚΑΤΑΧΩΡΙΣΗ</button>
                 <button class="btn btn-secondary" onclick="openCleaningSettingsModal()" style="margin-bottom: 20px; margin-left: 10px;">⚙️ ΡΥΘΜΙΣΕΙΣ ΚΑΘΑΡΙΣΜΟΥ</button>
                 
                 <div id="cleaningProgramDisplay" style="background: #e8f8e8; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
@@ -1646,7 +1712,7 @@
                 
                 <!-- Manual Entry Section -->
                 <div id="pestManualSection" style="margin-top: 30px; border-top: 2px solid #e9ecef; padding-top: 20px;">
-                    <h3 style="margin-bottom: 15px;">📝 Χειροκίνητη Καταχώριση</h3>
+                    <h3 style="margin-bottom: 15px;">📝 Καταχώριση</h3>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                         <input type="date" id="pestDate" class="form-input">
@@ -3507,7 +3573,7 @@
             } else {
                 document.getElementById('setupWizard').classList.add('active');
             }
-            
+
             showNotification('✅ Ενεργοποίηση επιτυχής!' + (storeCount > 1 ? ' 🏪 Καταστήματα: ' + storeCount : ''));
             
             console.log('✅ License activated: ' + businessName + (storeCount > 1 ? ' (Stores: ' + storeCount + ')' : ''));
@@ -3581,15 +3647,10 @@
                         // Load the store's specific data
                         loadStoreData(multiStoreConfig.currentStoreIndex);
                     } else {
-                        // 🛡️ v10.0.8 PROTECTION: Έλεγξε αν υπάρχουν ΗΔΗ δεδομένα στο systemData
-                        // Αν ναι, ΜΗΝ κάνεις setupComplete = false!
-                        if (systemData.equipment && systemData.equipment.length > 0) {
-                            console.log('🛡️ [initMultiStoreFromLicense] Equipment exists! NOT resetting setupComplete.');
-                        } else {
-                            // NO store data AND no equipment - this is a NEW store that needs setup
-                            console.log('🆕 [initMultiStoreFromLicense] No store data - forcing setupComplete = false');
-                            systemData.setupComplete = false;
-                        }
+                        // NO store data - this is a NEW store that needs setup
+                        // CRITICAL: Override whatever setupComplete was loaded from main hygienePro
+                        console.log('🆕 [initMultiStoreFromLicense] No store data - forcing setupComplete = false');
+                        systemData.setupComplete = false;
                     }
                 }
             }
@@ -3764,18 +3825,39 @@
                     console.log('   → Single store, showing wizard');
                     document.getElementById('setupWizard').classList.add('active');
                 }
-                
+
                 showAlert('ℹ️ Σετάρισμα Απαιτείται', 'Παρακαλώ ολοκληρώστε το σετάρισμα', 'info');
                 return;
             }
             
             // ============ CASE 4: EVERYTHING OK ============
-            console.log('➡️ CASE 4: All OK - Show dashboard');
-            const dashboardTab = document.getElementById('dashboard');
-            if (dashboardTab) {
-                dashboardTab.style.display = 'block';
-                dashboardTab.classList.add('active');
+            // v10.2.0: Show dataView (Excel-like) instead of dashboard
+            console.log('➡️ CASE 4: All OK - Show Data View (Excel-like)');
+
+            // Hide all tabs first
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+                tab.classList.remove('active');
+            });
+
+            // Show dataView as default
+            const dataViewTab = document.getElementById('dataView');
+            if (dataViewTab) {
+                dataViewTab.style.display = 'block';
+                dataViewTab.classList.add('active');
             }
+
+            // Keep mainNav hidden
+            const mainNav = document.getElementById('mainNav');
+            if (mainNav) {
+                mainNav.style.display = 'none';
+            }
+
+            // Initialize dataView
+            setTimeout(() => {
+                if (typeof initDataView === 'function') initDataView();
+                if (typeof updateDataViewTable === 'function') updateDataViewTable();
+            }, 500);
             
             // v9: Update multi-store badge
             updateMultiStoreBadge();
@@ -4213,20 +4295,6 @@
         }
         
         function resetStoreData() {
-            // 🛡️ v10.0.8 PROTECTION: Έλεγξε αν υπάρχουν ΗΔΗ δεδομένα!
-            // Αν ναι, ΜΗΝ τα διαγράψεις!
-            if (systemData.equipment && systemData.equipment.length > 0) {
-                console.log('🛡️ [resetStoreData] BLOCKED! Equipment exists (' + systemData.equipment.length + ' items). NOT resetting!');
-                return; // ΔΕΝ διαγράφουμε!
-            }
-            
-            if (systemData.temperatures && systemData.temperatures.length > 0) {
-                console.log('🛡️ [resetStoreData] BLOCKED! Temperatures exist (' + systemData.temperatures.length + ' records). NOT resetting!');
-                return; // ΔΕΝ διαγράφουμε!
-            }
-            
-            console.log('🆕 [resetStoreData] No existing data - safe to reset for new store');
-            
             // Reset data but keep license and multi-store config
             const license = systemData.license;
             
@@ -5385,13 +5453,13 @@
                 }
                 
                 // ✅ v9: Generate temperature records for each equipment
+                // v10.2: Use user-defined recording times instead of hardcoded hours
+                const recordingTimes = systemData.businessInfo.recordingTimes || ['08:00', '14:00', '20:00'];
+
                 if (hasEquipment) {
                     equipment.forEach(equip => {
-                        // Generate 2-3 readings per day per equipment
-                        const readingsPerDay = 2 + Math.floor(Math.random() * 2); // 2 or 3
-                        const hours = ['08:00', '12:00', '18:00'].slice(0, readingsPerDay);
-                        
-                        hours.forEach(time => {
+                        // Use all user-defined recording times
+                        recordingTimes.forEach(time => {
                             // Check if temperature record already exists
                             const tempExists = systemData.temperatures.some(t => 
                                 t.date === dateStr && t.time === time && t.equipmentId === equip.id
@@ -6448,7 +6516,10 @@ if (temp >= minTemp && temp <= maxTemp) {
                         <p style="color: #6c757d; margin: 5px 0;">${getEquipmentType(eq.type)}</p>
                         ${categoryLabel ? `<p style="color: #666; font-size: 0.85rem; margin: 5px 0;">${categoryLabel}</p>` : ''}
                         <p style="color: ${tempColor}; font-size: 0.9rem; margin: 5px 0;">🌡️ ${tempRange}</p>
-                        <button class="btn btn-danger" onclick="removeEquipment(${eq.id})" style="margin-top: 10px;">ΑΦΑΙΡΕΣΗ</button>
+                        <div style="margin-top: 10px; display: flex; gap: 8px;">
+                            <button class="btn btn-secondary" onclick="editEquipment(${eq.id})" style="flex: 1;">✏️ ΕΠΕΞΕΡΓΑΣΙΑ</button>
+                            <button class="btn btn-danger" onclick="removeEquipment(${eq.id})" style="flex: 1;">ΑΦΑΙΡΕΣΗ</button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -6472,6 +6543,24 @@ if (temp >= minTemp && temp <= maxTemp) {
                 saveData();
                 updateEquipmentList();
                 updateDashboard();
+            }
+        }
+
+        function editEquipment(id) {
+            const equipment = systemData.equipment.find(e => e.id === id);
+            if (!equipment) return;
+
+            const newName = prompt('Νέο όνομα εξοπλισμού:', equipment.name);
+            if (newName && newName.trim() !== '') {
+                equipment.name = newName.trim();
+                saveData();
+                updateEquipmentList();
+                updateDashboard();
+                // Update dataView if visible
+                if (typeof updateDataViewTable === 'function') {
+                    updateDataViewTable();
+                }
+                alert('✅ Ο εξοπλισμός ενημερώθηκε επιτυχώς!\n\nΟι παλιές καταγραφές θα εμφανίζουν το νέο όνομα.');
             }
         }
 
@@ -7842,16 +7931,9 @@ if (temp >= minTemp && temp <= maxTemp) {
                     // v7.4: Validate loaded license
                     if (systemData.license) {
                         if (!systemData.license.key || !systemData.license.businessName) {
-                            console.warn('Invalid license data in storage');
-                            // 🛡️ v10.0.8 PROTECTION: ΔΕΝ κάνουμε setupComplete = false αν υπάρχουν δεδομένα!
-                            if (systemData.equipment && systemData.equipment.length > 0) {
-                                console.log('🛡️ License invalid but equipment exists - NOT resetting setupComplete!');
-                                // Απλά αφήνουμε license = null, ο χρήστης θα πρέπει να ξαναβάλει κωδικό
-                                // αλλά ΔΕΝ χάνει τα δεδομένα του!
-                            } else {
-                                systemData.license = null;
-                                systemData.setupComplete = false;
-                            }
+                            console.warn('Invalid license data in storage - removing');
+                            systemData.license = null;
+                            systemData.setupComplete = false;
                         }
                         // Check expiry on load - DON'T remove, let checkSystemState handle it
                         // (checkSystemState will check Firebase for renewal first)
@@ -7880,19 +7962,23 @@ if (temp >= minTemp && temp <= maxTemp) {
                 }
             } catch (e) {
                 console.error('❌ Error loading data:', e);
-                // 🛡️ v10.0.8 PROTECTION: ΔΕΝ διαγράφουμε δεδομένα σε error!
-                // Απλά συνεχίζουμε με defaults για businessTypes
+                // Critical error - reset to defaults and clear storage
+                localStorage.removeItem('hygienePro');
                 systemData.businessTypes = [...BUSINESS_TYPES];
-                console.log('⚠️ Error loading - but NOT deleting data! Continuing with defaults.');
+                console.log('⚠️ Storage cleared due to error. Fresh start.');
             }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             initSystem();
-            
+
             // v10.0.3: Initialize secret mode
             setTimeout(initSecretMode, 500);
-            
+
+            // v10.2.0: Initialize DataView and Triple-Tap
+            setTimeout(initDataView, 500);
+            setTimeout(initTripleTap, 500);
+
             setTimeout(function() {
                 document.getElementById('btnFilterTemp')?.addEventListener('click', filterTemperatures);
                 document.getElementById('btnShowAllTemp')?.addEventListener('click', showAllTemperatures);
@@ -7902,6 +7988,504 @@ if (temp >= minTemp && temp <= maxTemp) {
                 document.getElementById('btnPrintFilteredClean')?.addEventListener('click', printFilteredCleaning);
             }, 1000);
         });
+
+        // ============================================
+        // 📊 v10.2.0: DATA VIEW FUNCTIONS
+        // ============================================
+
+        let currentDataView = 'temperatures';
+        let adminModeEnabled = false;
+
+        // Triple-tap detection for admin access - ONLY on logo image
+        function initTripleTap() {
+            const logoImage = document.getElementById('logoImage');
+            if (!logoImage) return;
+
+            let tapCount = 0;
+            let tapTimer = null;
+
+            logoImage.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent event from bubbling
+                tapCount++;
+
+                if (tapCount === 1) {
+                    tapTimer = setTimeout(() => {
+                        tapCount = 0;
+                    }, 500); // Reset after 500ms
+                }
+
+                if (tapCount === 3) {
+                    clearTimeout(tapTimer);
+                    tapCount = 0;
+                    toggleAdminMode();
+                }
+            });
+
+            // Also support long press for mobile - ONLY on logo
+            let pressTimer = null;
+            logoImage.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+                pressTimer = setTimeout(() => {
+                    toggleAdminMode();
+                }, 2000); // 2 second long press
+            });
+
+            logoImage.addEventListener('touchend', function() {
+                clearTimeout(pressTimer);
+            });
+        }
+
+        function toggleAdminMode() {
+            adminModeEnabled = !adminModeEnabled;
+            const mainNav = document.getElementById('mainNav');
+            const dataView = document.getElementById('dataView');
+
+            if (adminModeEnabled) {
+                // Show full navigation
+                mainNav.style.display = 'block';
+                dataView.style.display = 'none';
+                dataView.classList.remove('active');
+
+                // Show dashboard
+                showTab('dashboard');
+
+                // Flash notification
+                showNotification('🔓 Λειτουργία Διαχείρισης');
+            } else {
+                // Hide navigation, show data view
+                mainNav.style.display = 'none';
+
+                // Hide all tabs
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.style.display = 'none';
+                    tab.classList.remove('active');
+                });
+
+                // Show data view
+                dataView.style.display = 'block';
+                dataView.classList.add('active');
+                updateDataViewTable();
+
+                showNotification('🔒 Λειτουργία Προβολής');
+            }
+        }
+
+        function initDataView() {
+            // Set default dates (last 6 months)
+            const today = new Date();
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+            const dateFrom = document.getElementById('dataViewDateFrom');
+            const dateTo = document.getElementById('dataViewDateTo');
+
+            if (dateFrom) dateFrom.value = formatDateForInput(sixMonthsAgo);
+            if (dateTo) dateTo.value = formatDateForInput(today);
+
+            // Load initial data
+            setTimeout(updateDataViewTable, 1000);
+        }
+
+        function formatDateForInput(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function switchDataView(view) {
+            currentDataView = view;
+
+            const tempBtn = document.getElementById('dataViewTempBtn');
+            const cleanBtn = document.getElementById('dataViewCleanBtn');
+            const haccpInfo = document.getElementById('dataViewHaccpInfo');
+            const tableHead = document.getElementById('dataViewTableHead');
+
+            if (view === 'temperatures') {
+                tempBtn.className = 'btn btn-primary';
+                cleanBtn.className = 'btn btn-secondary';
+                haccpInfo.style.display = 'block';
+                tableHead.innerHTML = `
+                    <tr>
+                        <th>ΗΜΕΡΟΜΗΝΙΑ</th>
+                        <th>ΩΡΑ</th>
+                        <th>ΕΞΟΠΛΙΣΜΟΣ</th>
+                        <th>ΘΕΡΜΟΚΡΑΣΙΑ</th>
+                        <th>ΚΑΤΑΣΤΑΣΗ</th>
+                    </tr>
+                `;
+            } else {
+                tempBtn.className = 'btn btn-secondary';
+                cleanBtn.className = 'btn btn-primary';
+                haccpInfo.style.display = 'none';
+                tableHead.innerHTML = `
+                    <tr>
+                        <th>ΗΜΕΡΟΜΗΝΙΑ</th>
+                        <th>ΩΡΑ</th>
+                        <th>ΕΡΓΑΣΙΕΣ</th>
+                        <th>ΚΑΘΑΡΙΣΤΙΚΟ</th>
+                        <th>ΥΠΕΥΘΥΝΟΣ</th>
+                    </tr>
+                `;
+            }
+
+            updateDataViewTable();
+        }
+
+        function updateDataViewTable() {
+            const tbody = document.getElementById('dataViewTableBody');
+            if (!tbody) return;
+
+            const dateFrom = document.getElementById('dataViewDateFrom')?.value;
+            const dateTo = document.getElementById('dataViewDateTo')?.value;
+
+            let data = [];
+
+            if (currentDataView === 'temperatures') {
+                data = systemData.temperatures || [];
+            } else {
+                data = systemData.cleaning || [];
+            }
+
+            // Filter by date if set
+            if (dateFrom && dateTo) {
+                data = data.filter(item => {
+                    return item.date >= dateFrom && item.date <= dateTo;
+                });
+            }
+
+            // Sort by date descending
+            data.sort((a, b) => {
+                if (a.date !== b.date) return b.date.localeCompare(a.date);
+                return (b.time || '').localeCompare(a.time || '');
+            });
+
+            // Limit to 500 records for performance
+            const limitedData = data.slice(0, 500);
+
+            if (limitedData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #6c757d;">Δεν υπάρχουν καταγραφές</td></tr>`;
+                document.getElementById('dataViewInfo').textContent = 'Δεν βρέθηκαν δεδομένα';
+                return;
+            }
+
+            let html = '';
+            const cellStyle = 'border: 1px solid #d0d7de; padding: 8px 12px;';
+            const cellStyleCenter = 'border: 1px solid #d0d7de; padding: 8px 12px; text-align: center;';
+
+            if (currentDataView === 'temperatures') {
+                limitedData.forEach((record, index) => {
+                    const equipment = systemData.equipment?.find(e => e.id === record.equipmentId);
+                    const equipName = equipment ? equipment.name : (record.equipmentName || 'Άγνωστο');
+                    // v10.2: Use record's stored min/max temps, or equipment type, or infer from temperature
+                    const status = getDataViewTempStatusSmart(record, equipment);
+                    const statusColor = status === 'ΟΚ' ? '#28a745' : '#dc3545';
+                    const statusBg = status === 'ΟΚ' ? '#d4edda' : '#f8d7da';
+                    const rowBg = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
+
+                    html += `
+                        <tr style="background: ${rowBg};">
+                            <td style="${cellStyle}">${formatDisplayDate(record.date)}</td>
+                            <td style="${cellStyle}">${record.time || '-'}</td>
+                            <td style="${cellStyle}">${equipName}</td>
+                            <td style="${cellStyleCenter} font-weight: 600;">${record.temperature}°C</td>
+                            <td style="${cellStyleCenter} background: ${statusBg}; color: ${statusColor}; font-weight: 700;">${status}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                limitedData.forEach((record, index) => {
+                    // Get field_ keys (cleaning items are stored directly on record, not in fields object)
+                    const fieldKeys = Object.keys(record).filter(k =>
+                        k.startsWith('field_') &&
+                        !k.includes('_product') &&
+                        !k.includes('_method') &&
+                        !k.includes('_frequency') &&
+                        !k.includes('_responsible')
+                    );
+                    // Get names of completed tasks
+                    const completedTasks = fieldKeys
+                        .filter(k => record[k] === '✓' || record[k] === true)
+                        .map(k => k.replace('field_', '').replace(/_/g, ' '))
+                        .join(', ');
+
+                    // Get product and responsible from first completed task
+                    const firstCompletedKey = fieldKeys.find(k => record[k] === '✓' || record[k] === true);
+                    const product = firstCompletedKey ? (record[firstCompletedKey + '_product'] || '-') : '-';
+                    const responsible = firstCompletedKey ? (record[firstCompletedKey + '_responsible'] || record.responsible || '-') : '-';
+
+                    const rowBg = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
+
+                    html += `
+                        <tr style="background: ${rowBg};">
+                            <td style="${cellStyle}">${formatDisplayDate(record.date)}</td>
+                            <td style="${cellStyle}">${record.time || '-'}</td>
+                            <td style="${cellStyle}">${completedTasks || '-'}</td>
+                            <td style="${cellStyle}">${product}</td>
+                            <td style="${cellStyle}">${responsible}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            tbody.innerHTML = html;
+            document.getElementById('dataViewInfo').textContent =
+                `Εμφάνιση ${limitedData.length} από ${data.length} καταγραφές`;
+        }
+
+        function formatDisplayDate(dateStr) {
+            if (!dateStr) return '-';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function getDataViewTempStatus(temp, equipType) {
+            const t = parseFloat(temp);
+            if (isNaN(t)) return '-';
+
+            if (equipType === 'fridge' || equipType === 'display') {
+                return (t >= 0 && t <= 4) ? 'ΟΚ' : 'ΕΚΤΟΣ';
+            } else if (equipType === 'freezer') {
+                return (t >= -22 && t <= -18) ? 'ΟΚ' : 'ΕΚΤΟΣ';
+            } else if (equipType === 'hot') {
+                return (t >= 63) ? 'ΟΚ' : 'ΕΚΤΟΣ';
+            }
+            return '-';
+        }
+
+        // v10.2: Smart status detection using stored limits or inference
+        function getDataViewTempStatusSmart(record, equipment) {
+            const t = parseFloat(record.temperature);
+            if (isNaN(t)) return '-';
+
+            // 1. Try equipment type first
+            if (equipment?.type) {
+                return getDataViewTempStatus(t, equipment.type);
+            }
+
+            // 2. Try stored min/max temps in record
+            if (record.minTemp !== undefined && record.maxTemp !== undefined) {
+                return (t >= record.minTemp && t <= record.maxTemp) ? 'ΟΚ' : 'ΕΚΤΟΣ';
+            }
+
+            // 3. Infer from temperature value
+            if (t < -10) {
+                // Freezer range
+                return (t >= -22 && t <= -18) ? 'ΟΚ' : 'ΕΚΤΟΣ';
+            } else if (t >= 50) {
+                // Hot equipment
+                return (t >= 63) ? 'ΟΚ' : 'ΕΚΤΟΣ';
+            } else {
+                // Fridge/display (default)
+                return (t >= 0 && t <= 4) ? 'ΟΚ' : 'ΕΚΤΟΣ';
+            }
+        }
+
+        function filterDataView() {
+            updateDataViewTable();
+        }
+
+        function showAllDataView() {
+            // Reset to last 6 months
+            const today = new Date();
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+            document.getElementById('dataViewDateFrom').value = formatDateForInput(sixMonthsAgo);
+            document.getElementById('dataViewDateTo').value = formatDateForInput(today);
+
+            updateDataViewTable();
+        }
+
+        function openDataViewEntry() {
+            // Call the entry function directly without changing tabs
+            if (currentDataView === 'temperatures') {
+                manualTemperatureEntry();
+                loadDataView(); // Refresh the data view after entry
+            } else {
+                manualCleaningEntry();
+                loadDataView(); // Refresh the data view after entry
+            }
+        }
+
+        function exportDataViewExcel() {
+            const dateFrom = document.getElementById('dataViewDateFrom')?.value;
+            const dateTo = document.getElementById('dataViewDateTo')?.value;
+
+            if (!dateFrom || !dateTo) {
+                showNotification('⚠️ Επιλέξτε ημερομηνίες');
+                return;
+            }
+
+            let rawData = [];
+            let sheetName = '';
+            let fileName = '';
+
+            if (currentDataView === 'temperatures') {
+                sheetName = 'Θερμοκρασίες';
+                fileName = 'Θερμοκρασίες_' + dateFrom + '_' + dateTo + '.xlsx';
+                rawData = (systemData.temperatures || []).filter(t => {
+                    return t.date >= dateFrom && t.date <= dateTo;
+                });
+                rawData.sort((a, b) => a.date.localeCompare(b.date));
+
+                // Transform to Excel format
+                const excelData = rawData.map(record => {
+                    const equipment = systemData.equipment?.find(e => e.id === record.equipmentId);
+                    const equipName = equipment ? equipment.name : (record.equipmentName || 'Άγνωστο');
+                    const temp = parseFloat(record.temperature);
+                    let status = '-';
+                    if (equipment?.type === 'fridge' || equipment?.type === 'display') {
+                        status = (temp >= 0 && temp <= 4) ? 'ΟΚ' : 'ΕΚΤΟΣ ΟΡΙΩΝ';
+                    } else if (equipment?.type === 'freezer') {
+                        status = (temp >= -22 && temp <= -18) ? 'ΟΚ' : 'ΕΚΤΟΣ ΟΡΙΩΝ';
+                    } else if (equipment?.type === 'hot') {
+                        status = (temp >= 63) ? 'ΟΚ' : 'ΕΚΤΟΣ ΟΡΙΩΝ';
+                    }
+
+                    return {
+                        'ΗΜΕΡΟΜΗΝΙΑ': formatDisplayDate(record.date),
+                        'ΩΡΑ': record.time || '-',
+                        'ΕΞΟΠΛΙΣΜΟΣ': equipName,
+                        'ΘΕΡΜΟΚΡΑΣΙΑ': record.temperature + '°C',
+                        'ΚΑΤΑΣΤΑΣΗ': status
+                    };
+                });
+
+                // Create workbook with business info header
+                const businessName = systemData.businessInfo?.name || 'Επιχείρηση';
+                const ws = XLSX.utils.aoa_to_sheet([
+                    ['HYGIENE PRO - Αρχείο Θερμοκρασιών'],
+                    ['Επιχείρηση: ' + businessName],
+                    ['Περίοδος: ' + formatDisplayDate(dateFrom) + ' - ' + formatDisplayDate(dateTo)],
+                    ['Συνολικές Εγγραφές: ' + excelData.length],
+                    [],
+                    ['ΗΜΕΡΟΜΗΝΙΑ', 'ΩΡΑ', 'ΕΞΟΠΛΙΣΜΟΣ', 'ΘΕΡΜΟΚΡΑΣΙΑ', 'ΚΑΤΑΣΤΑΣΗ']
+                ]);
+                XLSX.utils.sheet_add_json(ws, excelData, { skipHeader: true, origin: 'A7' });
+
+                // Set column widths for better readability
+                ws['!cols'] = [
+                    { wch: 15 },  // ΗΜΕΡΟΜΗΝΙΑ
+                    { wch: 10 },  // ΩΡΑ
+                    { wch: 30 },  // ΕΞΟΠΛΙΣΜΟΣ
+                    { wch: 15 },  // ΘΕΡΜΟΚΡΑΣΙΑ
+                    { wch: 12 }   // ΚΑΤΑΣΤΑΣΗ
+                ];
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+                // Download
+                XLSX.writeFile(wb, fileName);
+
+            } else {
+                sheetName = 'Καθαριότητα';
+                fileName = 'Καθαριότητα_' + dateFrom + '_' + dateTo + '.xlsx';
+                rawData = (systemData.cleaning || []).filter(c => {
+                    return c.date >= dateFrom && c.date <= dateTo;
+                });
+                rawData.sort((a, b) => a.date.localeCompare(b.date));
+
+                // Transform to Excel format - fields are directly on record, not in fields object
+                const excelData = rawData.map(record => {
+                    const fieldKeys = Object.keys(record).filter(k =>
+                        k.startsWith('field_') &&
+                        !k.includes('_product') &&
+                        !k.includes('_method') &&
+                        !k.includes('_frequency') &&
+                        !k.includes('_responsible')
+                    );
+                    const checkedItems = fieldKeys
+                        .filter(k => record[k] === '✓' || record[k] === true)
+                        .map(k => k.replace('field_', '').replace(/_/g, ' '))
+                        .join(', ');
+
+                    // Get product and responsible from first completed task
+                    const firstCompletedKey = fieldKeys.find(k => record[k] === '✓' || record[k] === true);
+                    const product = firstCompletedKey ? (record[firstCompletedKey + '_product'] || '-') : '-';
+                    const responsible = firstCompletedKey ? (record[firstCompletedKey + '_responsible'] || record.responsible || '-') : '-';
+
+                    return {
+                        'ΗΜΕΡΟΜΗΝΙΑ': formatDisplayDate(record.date),
+                        'ΩΡΑ': record.time || '-',
+                        'ΕΡΓΑΣΙΕΣ': checkedItems || '-',
+                        'ΚΑΘΑΡΙΣΤΙΚΟ': product,
+                        'ΥΠΕΥΘΥΝΟΣ': responsible
+                    };
+                });
+
+                // Create workbook with business info header
+                const businessName = systemData.businessInfo?.name || 'Επιχείρηση';
+                const ws = XLSX.utils.aoa_to_sheet([
+                    ['HYGIENE PRO - Αρχείο Καθαριότητας'],
+                    ['Επιχείρηση: ' + businessName],
+                    ['Περίοδος: ' + formatDisplayDate(dateFrom) + ' - ' + formatDisplayDate(dateTo)],
+                    ['Συνολικές Εγγραφές: ' + excelData.length],
+                    [],
+                    ['ΗΜΕΡΟΜΗΝΙΑ', 'ΩΡΑ', 'ΕΡΓΑΣΙΕΣ', 'ΚΑΘΑΡΙΣΤΙΚΟ', 'ΥΠΕΥΘΥΝΟΣ']
+                ]);
+                XLSX.utils.sheet_add_json(ws, excelData, { skipHeader: true, origin: 'A7' });
+
+                // Set column widths for better readability
+                ws['!cols'] = [
+                    { wch: 15 },  // ΗΜΕΡΟΜΗΝΙΑ
+                    { wch: 10 },  // ΩΡΑ
+                    { wch: 40 },  // ΕΡΓΑΣΙΕΣ (μεγαλύτερο γιατί μπορεί να έχει πολλές)
+                    { wch: 25 },  // ΚΑΘΑΡΙΣΤΙΚΟ
+                    { wch: 20 }   // ΥΠΕΥΘΥΝΟΣ
+                ];
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+                // Download
+                XLSX.writeFile(wb, fileName);
+            }
+
+            if (rawData.length === 0) {
+                showNotification('⚠️ Δεν βρέθηκαν δεδομένα');
+                return;
+            }
+
+            showNotification('📥 Αρχείο Excel κατέβηκε!');
+        }
+
+        function exportDataViewPDF() {
+            const dateFrom = document.getElementById('dataViewDateFrom')?.value;
+            const dateTo = document.getElementById('dataViewDateTo')?.value;
+
+            if (!dateFrom || !dateTo) {
+                showNotification('⚠️ Επιλέξτε ημερομηνίες');
+                return;
+            }
+
+            let data = [];
+            let type = '';
+
+            if (currentDataView === 'temperatures') {
+                type = 'Θερμοκρασίες';
+                data = (systemData.temperatures || []).filter(t => {
+                    return t.date >= dateFrom && t.date <= dateTo;
+                });
+                data.sort((a, b) => a.date.localeCompare(b.date));
+            } else {
+                type = 'Καθαριότητα';
+                data = (systemData.cleaning || []).filter(c => {
+                    return c.date >= dateFrom && c.date <= dateTo;
+                });
+                data.sort((a, b) => a.date.localeCompare(b.date));
+            }
+
+            if (data.length === 0) {
+                showNotification('⚠️ Δεν βρέθηκαν δεδομένα');
+                return;
+            }
+
+            // Open print dialog for PDF
+            printCustomReport(type, data, dateFrom, dateTo);
+            showNotification('📄 Αποθηκεύστε ως PDF');
+        }
 
         window.addEventListener('beforeunload', saveData);
 
@@ -9503,7 +10087,8 @@ if (temp >= minTemp && temp <= maxTemp) {
             Developed by <span style="color: #fff; font-weight: 600;">ΚΑΜΠΑΚΟΣ Σ. - ΚΑΡΑΒΑΡΑ Α. Ο.Ε.</span>
         </div>
         <div style="margin-bottom: 5px;">
-            <span style="color: #e74c3c;">✉</span> hygieneprohellas<span>@</span>gmail.com | 
+            <span style="color: #e74c3c;">📞</span> 6945770219 | <span style="color: #e74c3c;">☎️</span> 2311111975 |
+            <span style="color: #e74c3c;">✉</span> hygieneprohellas<span>@</span>gmail.com |
             <span style="color: #e74c3c;">📍</span> Καπετάν Γκόνη 13, Σταυρούπολη, Θεσσαλονίκη
         </div>
         <div style="margin-top: 8px; margin-bottom: 5px; font-size: 11px;">
