@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v10.2.1 - Σύστημα Ελέγχου Υγιεινής</title>
+    <title>Hygiene Pro v10.2.2 - Σύστημα Ελέγχου Υγιεινής</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -1810,12 +1810,8 @@
                             <p style="font-size: 0.9rem; opacity: 0.9;">Ημερομηνίες λήξης προσωπικού</p>
                         </div>
                         
-                        <!-- Pest Control Schedule -->
-                        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 10px; color: white; cursor: pointer;" onclick="generatePestScheduleReport()">
-                            <h3 style="margin-bottom: 10px;">🐀 Πρόγραμμα Απεντόμωσης</h3>
-                            <p style="font-size: 0.9rem; opacity: 0.9;">Ιστορικό & επόμενες προγραμματισμένες</p>
-                        </div>
-                        
+                        <!-- v10.2.2: Αφαιρέθηκε κουμπί Απεντόμωσης - υπάρχει ήδη εκτύπωση -->
+
                         <!-- Statistics & Analytics -->
                         <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); padding: 20px; border-radius: 10px; color: white; cursor: pointer;" onclick="generateStatisticsReport()">
                             <h3 style="margin-bottom: 10px;">📈 Στατιστικά & Ανάλυση</h3>
@@ -7427,25 +7423,307 @@ if (temp >= minTemp && temp <= maxTemp) {
             printWindow.document.close();
         }
 
-        // ✅ v8.10: NEW REPORT FUNCTIONS
-        
+        // ✅ v10.2.2: REAL REPORT FUNCTIONS
+
         function generateComplianceReport() {
-            alert('📋 Αναφορά Συμμόρφωσης ΕΦΕΤ\n\n✅ Θερμοκρασίες: Ενεργές\n✅ Καθαρισμοί: Τρέχουσες\n✅ Προσωπικό: Πιστοποιημένο\n✅ Απεντόμωση: Ενημερωμένη\n\nΈγγραφο έτοιμο για εκτύπωση');
+            const today = new Date();
+            const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+            // Έλεγχος θερμοκρασιών τελευταίων 7 ημερών
+            const recentTemps = (systemData.temperatures || []).filter(t => new Date(t.date) >= sevenDaysAgo);
+            const tempsOK = recentTemps.length > 0;
+
+            // Έλεγχος καθαριότητας τελευταίων 7 ημερών
+            const recentClean = (systemData.cleaning || []).filter(c => new Date(c.date) >= sevenDaysAgo);
+            const cleanOK = recentClean.length > 0;
+
+            // Έλεγχος προσωπικού με πιστοποιητικά υγείας σε ισχύ
+            const staffWithValidCerts = (systemData.staff || []).filter(s => {
+                if (!s.healthExpiry) return false;
+                return new Date(s.healthExpiry) > today;
+            });
+            const staffOK = (systemData.staff || []).length > 0 && staffWithValidCerts.length === (systemData.staff || []).length;
+
+            // Έλεγχος απεντόμωσης (τελευταίους 6 μήνες)
+            const sixMonthsAgo = new Date(today.getTime() - 180 * 24 * 60 * 60 * 1000);
+            const recentPest = (systemData.pestRecurring || []).filter(p => new Date(p.date) >= sixMonthsAgo);
+            const pestOK = recentPest.length > 0;
+
+            const allOK = tempsOK && cleanOK && staffOK && pestOK;
+
+            // Δημιουργία παραθύρου εκτύπωσης
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Αναφορά Συμμόρφωσης ΕΦΕΤ</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 40px; }
+                        h1 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+                        .check-item { padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; align-items: center; }
+                        .check-ok { background: #d4edda; border-left: 4px solid #28a745; }
+                        .check-fail { background: #f8d7da; border-left: 4px solid #dc3545; }
+                        .icon { font-size: 24px; margin-right: 15px; }
+                        .summary { margin-top: 30px; padding: 20px; background: ${allOK ? '#d4edda' : '#f8d7da'}; border-radius: 10px; text-align: center; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                        @media print { .no-print { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <h1>📋 Αναφορά Συμμόρφωσης ΕΦΕΤ</h1>
+                    <p><strong>Ημερομηνία:</strong> ${today.toLocaleDateString('el-GR')} | <strong>Επιχείρηση:</strong> ${systemData.license ? systemData.license.businessName : 'Δοκιμαστική'}</p>
+
+                    <div class="check-item ${tempsOK ? 'check-ok' : 'check-fail'}">
+                        <span class="icon">${tempsOK ? '✅' : '❌'}</span>
+                        <div>
+                            <strong>Θερμοκρασίες (7 ημέρες)</strong><br>
+                            ${tempsOK ? `${recentTemps.length} καταγραφές` : 'Δεν υπάρχουν καταγραφές!'}
+                        </div>
+                    </div>
+
+                    <div class="check-item ${cleanOK ? 'check-ok' : 'check-fail'}">
+                        <span class="icon">${cleanOK ? '✅' : '❌'}</span>
+                        <div>
+                            <strong>Καθαριότητα (7 ημέρες)</strong><br>
+                            ${cleanOK ? `${recentClean.length} ενέργειες` : 'Δεν υπάρχουν καταγραφές!'}
+                        </div>
+                    </div>
+
+                    <div class="check-item ${staffOK ? 'check-ok' : 'check-fail'}">
+                        <span class="icon">${staffOK ? '✅' : '❌'}</span>
+                        <div>
+                            <strong>Πιστοποιητικά Υγείας Προσωπικού</strong><br>
+                            ${(systemData.staff || []).length === 0 ? 'Δεν έχει καταχωρηθεί προσωπικό' :
+                              staffOK ? `${staffWithValidCerts.length}/${(systemData.staff || []).length} σε ισχύ` :
+                              `${staffWithValidCerts.length}/${(systemData.staff || []).length} σε ισχύ - ΕΛΕΓΞΤΕ ΛΗΞΕΙΣ!`}
+                        </div>
+                    </div>
+
+                    <div class="check-item ${pestOK ? 'check-ok' : 'check-fail'}">
+                        <span class="icon">${pestOK ? '✅' : '❌'}</span>
+                        <div>
+                            <strong>Απεντόμωση (6 μήνες)</strong><br>
+                            ${pestOK ? `${recentPest.length} επεμβάσεις` : 'Δεν υπάρχει πρόσφατη καταγραφή!'}
+                        </div>
+                    </div>
+
+                    <div class="summary">
+                        <h2>${allOK ? '✅ ΣΥΜΜΟΡΦΩΣΗ ΟΚ' : '⚠️ ΑΠΑΙΤΟΥΝΤΑΙ ΕΝΕΡΓΕΙΕΣ'}</h2>
+                    </div>
+
+                    <div class="footer">
+                        © 2026 Hygiene Pro - ${systemData.license ? systemData.license.businessName : 'Δοκιμαστική'}<br>
+                        Απαγορεύεται η αντιγραφή και αναδιανομή
+                    </div>
+
+                    <div class="no-print" style="margin-top: 20px; text-align: center;">
+                        <button onclick="window.print()" style="padding: 10px 20px; background: #667eea; color: white; border: none; cursor: pointer; border-radius: 5px;">🖨️ Εκτύπωση</button>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
-        
+
         function generateCertificateReport() {
-            alert('📜 Αναφορά Πιστοποιητικών\n\nΠροσωπικό: ' + (systemData.staff ? systemData.staff.length : 0) + ' μέλη\nΠιστοποιημένα: ✅\nΛήξεις εντός 30 ημ.: ' + checkExpiringCertificates() + '\n\nΈγγραφο έτοιμο για εκτύπωση');
+            const today = new Date();
+            const staff = systemData.staff || [];
+
+            if (staff.length === 0) {
+                alert('⚠️ Δεν υπάρχει καταχωρημένο προσωπικό!');
+                return;
+            }
+
+            // Υπολογισμός κατάστασης για κάθε υπάλληλο
+            const staffStatus = staff.map(s => {
+                let healthStatus = 'Δεν έχει';
+                let healthClass = 'status-none';
+                let daysLeft = null;
+
+                if (s.healthExpiry) {
+                    const expiry = new Date(s.healthExpiry);
+                    daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+
+                    if (daysLeft < 0) {
+                        healthStatus = '❌ ΕΛΗΞΕ';
+                        healthClass = 'status-expired';
+                    } else if (daysLeft <= 30) {
+                        healthStatus = `⚠️ Λήγει σε ${daysLeft} μέρες`;
+                        healthClass = 'status-warning';
+                    } else {
+                        healthStatus = `✅ ΟΚ (${daysLeft} μέρες)`;
+                        healthClass = 'status-ok';
+                    }
+                }
+
+                return {
+                    name: s.name,
+                    role: s.role,
+                    healthExpiry: s.healthExpiry ? new Date(s.healthExpiry).toLocaleDateString('el-GR') : '-',
+                    healthStatus: healthStatus,
+                    healthClass: healthClass,
+                    efetIssue: s.efetIssue ? new Date(s.efetIssue).toLocaleDateString('el-GR') : '-',
+                    hasEfet: s.efetIssue ? '✅ Ναι' : '❌ Όχι'
+                };
+            });
+
+            // Δημιουργία παραθύρου εκτύπωσης
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Αναφορά Πιστοποιητικών</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 40px; }
+                        h1 { color: #333; border-bottom: 2px solid #f093fb; padding-bottom: 10px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                        th { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+                        tr:nth-child(even) { background: #f9f9f9; }
+                        .status-ok { color: #28a745; font-weight: bold; }
+                        .status-warning { color: #ffc107; font-weight: bold; }
+                        .status-expired { color: #dc3545; font-weight: bold; }
+                        .status-none { color: #6c757d; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                        @media print { .no-print { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <h1>📜 Αναφορά Πιστοποιητικών Προσωπικού</h1>
+                    <p><strong>Ημερομηνία:</strong> ${today.toLocaleDateString('el-GR')} | <strong>Επιχείρηση:</strong> ${systemData.license ? systemData.license.businessName : 'Δοκιμαστική'}</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Όνομα</th>
+                                <th>Θέση</th>
+                                <th>Πιστ. Υγείας (Λήξη)</th>
+                                <th>Κατάσταση</th>
+                                <th>Εκπαίδευση ΕΦΕΤ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${staffStatus.map(s => `
+                                <tr>
+                                    <td>${s.name}</td>
+                                    <td>${s.role}</td>
+                                    <td>${s.healthExpiry}</td>
+                                    <td class="${s.healthClass}">${s.healthStatus}</td>
+                                    <td>${s.hasEfet}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <div class="footer">
+                        © 2026 Hygiene Pro - ${systemData.license ? systemData.license.businessName : 'Δοκιμαστική'}<br>
+                        Απαγορεύεται η αντιγραφή και αναδιανομή
+                    </div>
+
+                    <div class="no-print" style="margin-top: 20px; text-align: center;">
+                        <button onclick="window.print()" style="padding: 10px 20px; background: #f093fb; color: white; border: none; cursor: pointer; border-radius: 5px;">🖨️ Εκτύπωση</button>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
-        
+
         function generatePestScheduleReport() {
-            const pestCount = systemData.pestRecurring ? systemData.pestRecurring.length : 0;
-            alert('🐀 Πρόγραμμα Απεντόμωσης\n\nΣύνολο Καταγραφών: ' + pestCount + '\nΣύνολο Εταιρειών: ' + countPestCompanies() + '\nΤελευταία: ' + getLastPestControl() + '\n\nΈγγραφο έτοιμο για εκτύπωση');
+            // v10.2.2: Αφαιρέθηκε - υπάρχει ήδη εκτύπωση Απεντόμωσης
+            printReport('pest');
         }
-        
+
         function generateStatisticsReport() {
-            const tempCount = systemData.temperatures ? systemData.temperatures.length : 0;
-            const cleanCount = systemData.cleaning ? systemData.cleaning.length : 0;
-            alert('📈 Στατιστικά\n\nΘερμοκρασίες: ' + tempCount + ' καταγραφές\nΚαθαριότητα: ' + cleanCount + ' ενέργειες\nΠροσωπικό: ' + (systemData.staff ? systemData.staff.length : 0) + ' μέλη\nΠαρακολούθηση: ✅ ΕΝΕΡΓΗ\n\nΈγγραφο έτοιμο για εκτύπωση');
+            const today = new Date();
+            const temps = systemData.temperatures || [];
+            const cleans = systemData.cleaning || [];
+            const staff = systemData.staff || [];
+            const pest = systemData.pestRecurring || [];
+
+            // Υπολογισμός στατιστικών
+            const tempCount = temps.length;
+            const cleanCount = cleans.length;
+            const staffCount = staff.length;
+            const pestCount = pest.length;
+
+            // Υπολογισμός ανά εβδομάδα (τελευταίες 4 εβδομάδες)
+            const fourWeeksAgo = new Date(today.getTime() - 28 * 24 * 60 * 60 * 1000);
+            const recentTemps = temps.filter(t => new Date(t.date) >= fourWeeksAgo);
+            const recentCleans = cleans.filter(c => new Date(c.date) >= fourWeeksAgo);
+
+            const tempsPerWeek = recentTemps.length > 0 ? (recentTemps.length / 4).toFixed(1) : 0;
+            const cleansPerWeek = recentCleans.length > 0 ? (recentCleans.length / 4).toFixed(1) : 0;
+
+            // Πιστοποιητικά σε ισχύ
+            const validCerts = staff.filter(s => s.healthExpiry && new Date(s.healthExpiry) > today).length;
+
+            // Δημιουργία παραθύρου εκτύπωσης
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Στατιστικά & Ανάλυση</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 40px; }
+                        h1 { color: #333; border-bottom: 2px solid #43e97b; padding-bottom: 10px; }
+                        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
+                        .stat-card { background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center; }
+                        .stat-number { font-size: 36px; font-weight: bold; color: #667eea; }
+                        .stat-label { font-size: 14px; color: #666; margin-top: 5px; }
+                        .stat-detail { font-size: 12px; color: #999; margin-top: 10px; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                        @media print { .no-print { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <h1>📈 Στατιστικά & Ανάλυση</h1>
+                    <p><strong>Ημερομηνία:</strong> ${today.toLocaleDateString('el-GR')} | <strong>Επιχείρηση:</strong> ${systemData.license ? systemData.license.businessName : 'Δοκιμαστική'}</p>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">${tempCount}</div>
+                            <div class="stat-label">Καταγραφές Θερμοκρασίας</div>
+                            <div class="stat-detail">~${tempsPerWeek} / εβδομάδα (τελευταίες 4)</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-number">${cleanCount}</div>
+                            <div class="stat-label">Ενέργειες Καθαριότητας</div>
+                            <div class="stat-detail">~${cleansPerWeek} / εβδομάδα (τελευταίες 4)</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-number">${staffCount}</div>
+                            <div class="stat-label">Μέλη Προσωπικού</div>
+                            <div class="stat-detail">${validCerts}/${staffCount} με πιστοποιητικό σε ισχύ</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-number">${pestCount}</div>
+                            <div class="stat-label">Καταγραφές Απεντόμωσης</div>
+                            <div class="stat-detail">Συνολικά στο σύστημα</div>
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        © 2026 Hygiene Pro - ${systemData.license ? systemData.license.businessName : 'Δοκιμαστική'}<br>
+                        Απαγορεύεται η αντιγραφή και αναδιανομή
+                    </div>
+
+                    <div class="no-print" style="margin-top: 20px; text-align: center;">
+                        <button onclick="window.print()" style="padding: 10px 20px; background: #43e97b; color: white; border: none; cursor: pointer; border-radius: 5px;">🖨️ Εκτύπωση</button>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
         
         function exportDataAsJSON() {
