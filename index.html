@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v10.2.0 - Σύστημα Ελέγχου Υγιεινής</title>
+    <title>Hygiene Pro v10.2.1 - Σύστημα Ελέγχου Υγιεινής</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -1353,7 +1353,7 @@
                     </div>
                 </div>
             </div>
-<!-- v10.2.0: DATA VIEW - New default screen (Excel-like) -->
+<!-- v10.2.1: DATA VIEW - New default screen (Excel-like) -->
             <div class="tab-content active" id="dataView">
                 <!-- Sub-navigation tabs -->
                 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -2679,7 +2679,7 @@
                     return b.time.localeCompare(a.time);
                 });
 
-                // v10.2.0: Download both HTML and Excel
+                // v10.2.1: Download both HTML and Excel
                 createBackupHTML(systemData.temperatures, systemData.cleaning);
                 generateAndDownloadBackupExcel(sortedTemps, sortedCleans);
 
@@ -3170,7 +3170,7 @@
                 // Generate HTML backup (same as manual backup)
                 generateAndDownloadBackupHTML(sortedTemps, sortedCleans);
 
-                // v10.2.0: Generate Excel backup too
+                // v10.2.1: Generate Excel backup too
                 generateAndDownloadBackupExcel(sortedTemps, sortedCleans);
                 
                 // Store metadata in localStorage
@@ -3341,7 +3341,7 @@
             }
         }
 
-        // v10.2.0: Excel backup with auto-fit columns and status column
+        // v10.2.1: Excel backup with auto-fit columns and status column
         function generateAndDownloadBackupExcel(sortedTemps, sortedCleans) {
             try {
                 if (typeof XLSX === 'undefined') {
@@ -3438,18 +3438,26 @@
                     const cleanWs = XLSX.utils.aoa_to_sheet(cleanHeader);
                     XLSX.utils.sheet_add_aoa(cleanWs, cleanData, { origin: 'A7' });
 
-                    // Auto-fit column widths
+                    // v10.2.1: Dynamic auto-fit column widths based on content
+                    const maxTasksLength = Math.max(
+                        10, // minimum
+                        ...cleanData.map(row => (row[2] || '').length)
+                    );
+                    const maxResponsibleLength = Math.max(
+                        10,
+                        ...cleanData.map(row => (row[3] || '').length)
+                    );
                     cleanWs['!cols'] = [
                         { wch: 12 },  // Ημερομηνία
                         { wch: 8 },   // Ώρα
-                        { wch: 50 },  // Εργασίες
-                        { wch: 20 }   // Υπεύθυνος
+                        { wch: Math.min(maxTasksLength + 2, 150) },  // Εργασίες (max 150)
+                        { wch: Math.min(maxResponsibleLength + 2, 40) }   // Υπεύθυνος (max 40)
                     ];
 
                     XLSX.utils.book_append_sheet(wb, cleanWs, 'Καθαριότητα');
                 }
 
-                // v10.2.0: Only download if there's at least one sheet with data
+                // v10.2.1: Only download if there's at least one sheet with data
                 if (sortedTemps.length === 0 && sortedCleans.length === 0) {
                     console.log('⏭️ Excel backup skipped - no data to export');
                     return;
@@ -3987,7 +3995,7 @@
             }
             
             // ============ CASE 4: EVERYTHING OK ============
-            // v10.2.0: Show dataView (Excel-like) instead of dashboard
+            // v10.2.1: Show dataView (Excel-like) instead of dashboard
             console.log('➡️ CASE 4: All OK - Show Data View (Excel-like)');
 
             // Hide all tabs first
@@ -8137,7 +8145,7 @@ if (temp >= minTemp && temp <= maxTemp) {
             // v10.0.3: Initialize secret mode
             setTimeout(initSecretMode, 500);
 
-            // v10.2.0: Initialize DataView and Triple-Tap
+            // v10.2.1: Initialize DataView and Triple-Tap
             setTimeout(initDataView, 500);
             setTimeout(initTripleTap, 500);
 
@@ -8152,7 +8160,7 @@ if (temp >= minTemp && temp <= maxTemp) {
         });
 
         // ============================================
-        // 📊 v10.2.0: DATA VIEW FUNCTIONS
+        // 📊 v10.2.1: DATA VIEW FUNCTIONS
         // ============================================
 
         let currentDataView = 'temperatures';
@@ -8422,7 +8430,7 @@ if (temp >= minTemp && temp <= maxTemp) {
             return '-';
         }
 
-        // v10.2.0: Smart status detection using stored limits, category, or inference
+        // v10.2.1: Smart status detection using stored limits, category, or inference
         function getDataViewTempStatusSmart(record, equipment) {
             const t = parseFloat(record.temperature);
             if (isNaN(t)) return '-';
