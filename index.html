@@ -2665,8 +2665,25 @@
             }
             const ok = window.confirm('Δημιουργία backup;\n\nΘερμοκρασίες: ' + systemData.temperatures.length + '\nΚαθαριότητα: ' + systemData.cleaning.length);
             if (ok) {
+                // Sort data for backup (newest first)
+                const sortedTemps = [...systemData.temperatures].sort((a, b) => {
+                    const dateA = a.date.replace(/-/g, '');
+                    const dateB = b.date.replace(/-/g, '');
+                    if (dateA !== dateB) return dateB.localeCompare(dateA);
+                    return b.time.localeCompare(a.time);
+                });
+                const sortedCleans = [...systemData.cleaning].sort((a, b) => {
+                    const dateA = a.date.replace(/-/g, '');
+                    const dateB = b.date.replace(/-/g, '');
+                    if (dateA !== dateB) return dateB.localeCompare(dateA);
+                    return b.time.localeCompare(a.time);
+                });
+
+                // v10.2.0: Download both HTML and Excel
                 createBackupHTML(systemData.temperatures, systemData.cleaning);
-                showNotification('✅ Backup δημιουργήθηκε!');
+                generateAndDownloadBackupExcel(sortedTemps, sortedCleans);
+
+                showNotification('✅ Backup δημιουργήθηκε! (HTML + Excel)');
             }
         }
         
@@ -2932,21 +2949,27 @@
                 <table>
                     <thead>
                         <tr>
-                            <td style="width: 15%;">Ημερομηνία</td>
-                            <td style="width: 10%;">Ώρα</td>
-                            <td style="width: 45%;">Εξοπλισμός</td>
-                            <td style="width: 30%;">Θερμοκρασία</td>
+                            <td style="width: 14%;">Ημερομηνία</td>
+                            <td style="width: 8%;">Ώρα</td>
+                            <td style="width: 38%;">Εξοπλισμός</td>
+                            <td style="width: 15%;">Θερμοκρασία</td>
+                            <td style="width: 25%;">Κατάσταση</td>
                         </tr>
                     </thead>
                     <tbody>
-                        ${sortedTemps.map(t => `
+                        ${sortedTemps.map(t => {
+                            const tempStatus = typeof getTemperatureStatus === 'function' ? getTemperatureStatus(t) : { isNormal: true };
+                            const statusText = tempStatus.isNormal ? 'Κανονική' : 'Εκτός ορίων';
+                            const statusColor = tempStatus.isNormal ? '#28a745' : '#dc3545';
+                            return `
                         <tr>
                             <td>${t.date}</td>
                             <td>${t.time}</td>
                             <td>${(t.equipmentName || t.equipment || 'N/A').substring(0, 40)}</td>
                             <td><strong>${(t.temperature !== undefined ? t.temperature : (t.value || '?'))}°C</strong></td>
-                        </tr>
-                        `).join('')}
+                            <td style="color: ${statusColor}; font-weight: bold;">${statusText}</td>
+                        </tr>`;
+                        }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -3146,6 +3169,9 @@
                 
                 // Generate HTML backup (same as manual backup)
                 generateAndDownloadBackupHTML(sortedTemps, sortedCleans);
+
+                // v10.2.0: Generate Excel backup too
+                generateAndDownloadBackupExcel(sortedTemps, sortedCleans);
                 
                 // Store metadata in localStorage
                 const backupData = {
@@ -3221,9 +3247,14 @@
         ${sortedTemps.length > 0 ? `
         <div class="section-title">🌡️ ΘΕΡΜΟΚΡΑΣΙΕΣ (${sortedTemps.length} εγγραφές)</div>
         <table>
-            <thead><tr><td>Ημερομηνία</td><td>Ώρα</td><td>Εξοπλισμός</td><td>Θερμοκρασία</td></tr></thead>
+            <thead><tr><td>Ημερομηνία</td><td>Ώρα</td><td>Εξοπλισμός</td><td>Θερμοκρασία</td><td>Κατάσταση</td></tr></thead>
             <tbody>
-                ${sortedTemps.map(t => `<tr><td>${t.date}</td><td>${t.time}</td><td>${(t.equipmentName || t.equipment || 'N/A').substring(0, 40)}</td><td><strong>${(t.temperature || t.value || '?')}°C</strong></td></tr>`).join('')}
+                ${sortedTemps.map(t => {
+                    const tempStatus = typeof getTemperatureStatus === 'function' ? getTemperatureStatus(t) : { isNormal: true };
+                    const statusText = tempStatus.isNormal ? 'Κανονική' : 'Εκτός ορίων';
+                    const statusColor = tempStatus.isNormal ? '#28a745' : '#dc3545';
+                    return `<tr><td>${t.date}</td><td>${t.time}</td><td>${(t.equipmentName || t.equipment || 'N/A').substring(0, 40)}</td><td><strong>${(t.temperature || t.value || '?')}°C</strong></td><td style="color: ${statusColor}; font-weight: bold;">${statusText}</td></tr>`;
+                }).join('')}
             </tbody>
         </table>
         ` : ''}
@@ -3309,7 +3340,132 @@
                 console.error('Error downloading backup:', error);
             }
         }
-        
+
+        // v10.2.0: Excel backup with auto-fit columns and status column
+        function generateAndDownloadBackupExcel(sortedTemps, sortedCleans) {
+            try {
+                if (typeof XLSX === 'undefined') {
+                    console.warn('XLSX library not loaded, skipping Excel backup');
+                    return;
+                }
+
+                const info = systemData.businessInfo;
+                const shortName = info?.name || 'H-PRO';
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+
+                // Create workbook
+                const wb = XLSX.utils.book_new();
+
+                // ===== TEMPERATURES SHEET =====
+                if (sortedTemps.length > 0) {
+                    const tempHeader = [
+                        ['📋 H-PRO BACKUP - ΘΕΡΜΟΚΡΑΣΙΕΣ'],
+                        ['Επιχείρηση: ' + shortName],
+                        ['Ημερομηνία: ' + new Date().toLocaleString('el-GR')],
+                        ['Σύνολο Εγγραφών: ' + sortedTemps.length],
+                        [],
+                        ['Ημερομηνία', 'Ώρα', 'Εξοπλισμός', 'Θερμοκρασία', 'Κατάσταση']
+                    ];
+
+                    const tempData = sortedTemps.map(t => {
+                        const tempStatus = typeof getTemperatureStatus === 'function' ? getTemperatureStatus(t) : { isNormal: true };
+                        const statusText = tempStatus.isNormal ? 'Κανονική' : 'Εκτός ορίων';
+                        return [
+                            t.date,
+                            t.time,
+                            (t.equipmentName || t.equipment || 'N/A').substring(0, 40),
+                            (t.temperature !== undefined ? t.temperature : (t.value || '?')) + '°C',
+                            statusText
+                        ];
+                    });
+
+                    const tempWs = XLSX.utils.aoa_to_sheet(tempHeader);
+                    XLSX.utils.sheet_add_aoa(tempWs, tempData, { origin: 'A7' });
+
+                    // Auto-fit column widths
+                    tempWs['!cols'] = [
+                        { wch: 12 },  // Ημερομηνία
+                        { wch: 8 },   // Ώρα
+                        { wch: 35 },  // Εξοπλισμός
+                        { wch: 14 },  // Θερμοκρασία
+                        { wch: 14 }   // Κατάσταση
+                    ];
+
+                    XLSX.utils.book_append_sheet(wb, tempWs, 'Θερμοκρασίες');
+                }
+
+                // ===== CLEANING SHEET =====
+                if (sortedCleans.length > 0) {
+                    const cleanHeader = [
+                        ['📋 H-PRO BACKUP - ΚΑΘΑΡΙΟΤΗΤΑ'],
+                        ['Επιχείρηση: ' + shortName],
+                        ['Ημερομηνία: ' + new Date().toLocaleString('el-GR')],
+                        ['Σύνολο Εγγραφών: ' + sortedCleans.length],
+                        [],
+                        ['Ημερομηνία', 'Ώρα', 'Εργασίες', 'Υπεύθυνος']
+                    ];
+
+                    const defaultResponsible = info?.owner || '';
+                    const cleanData = sortedCleans.map(c => {
+                        let tasks = [];
+                        let responsible = c.responsible || defaultResponsible || '-';
+
+                        // Get field_* properties
+                        Object.entries(c).forEach(([key, value]) => {
+                            if (key.startsWith('field_') && !key.includes('_product') && !key.includes('_method') && !key.includes('_frequency') && !key.includes('_responsible') && value === '✓') {
+                                const fieldName = key.replace('field_', '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                                tasks.push(fieldName);
+                                if (c[key + '_responsible']) responsible = c[key + '_responsible'];
+                            }
+                        });
+
+                        // Fallback for old format
+                        if (tasks.length === 0) {
+                            if (c.general) tasks.push('Γενικός Καθαρισμός');
+                            if (c.disinfection) tasks.push('Απολύμανση');
+                            if (c.showcases) tasks.push('Βιτρίνες');
+                            if (c.tools) tasks.push('Εργαλεία');
+                        }
+
+                        return [
+                            c.date,
+                            c.time,
+                            tasks.join(', ') || 'Καθαρισμός εκτελέστηκε',
+                            responsible
+                        ];
+                    });
+
+                    const cleanWs = XLSX.utils.aoa_to_sheet(cleanHeader);
+                    XLSX.utils.sheet_add_aoa(cleanWs, cleanData, { origin: 'A7' });
+
+                    // Auto-fit column widths
+                    cleanWs['!cols'] = [
+                        { wch: 12 },  // Ημερομηνία
+                        { wch: 8 },   // Ώρα
+                        { wch: 50 },  // Εργασίες
+                        { wch: 20 }   // Υπεύθυνος
+                    ];
+
+                    XLSX.utils.book_append_sheet(wb, cleanWs, 'Καθαριότητα');
+                }
+
+                // v10.2.0: Only download if there's at least one sheet with data
+                if (sortedTemps.length === 0 && sortedCleans.length === 0) {
+                    console.log('⏭️ Excel backup skipped - no data to export');
+                    return;
+                }
+
+                // Download Excel file
+                const fileName = 'H-PRO-Backup-' + shortName.replace(/\s+/g, '-') + '-' + timestamp + '.xlsx';
+                XLSX.writeFile(wb, fileName);
+
+                console.log('✅ Excel backup downloaded: ' + fileName);
+
+            } catch (error) {
+                console.error('Error creating Excel backup:', error);
+            }
+        }
+
         function createBackupPDF(oldTemps, oldClean, cutoffDate, monthsToKeep) {
             try {
                 const { jsPDF } = window.jspdf;
@@ -5253,21 +5409,27 @@
                 <table>
                     <thead>
                         <tr>
-                            <td style="width: 15%;">Ημερομηνία</td>
-                            <td style="width: 10%;">Ώρα</td>
-                            <td style="width: 45%;">Εξοπλισμός</td>
-                            <td style="width: 30%;">Θερμοκρασία</td>
+                            <td style="width: 14%;">Ημερομηνία</td>
+                            <td style="width: 8%;">Ώρα</td>
+                            <td style="width: 38%;">Εξοπλισμός</td>
+                            <td style="width: 15%;">Θερμοκρασία</td>
+                            <td style="width: 25%;">Κατάσταση</td>
                         </tr>
                     </thead>
                     <tbody>
-                        ${sortedTemps.map(t => `
+                        ${sortedTemps.map(t => {
+                            const tempStatus = typeof getTemperatureStatus === 'function' ? getTemperatureStatus(t) : { isNormal: true };
+                            const statusText = tempStatus.isNormal ? 'Κανονική' : 'Εκτός ορίων';
+                            const statusColor = tempStatus.isNormal ? '#28a745' : '#dc3545';
+                            return `
                         <tr>
                             <td>${t.date}</td>
                             <td>${t.time}</td>
                             <td>${(t.equipmentName || t.equipment || 'N/A').substring(0, 40)}</td>
                             <td><strong>${(t.temperature !== undefined ? t.temperature : (t.value || '?'))}°C</strong></td>
-                        </tr>
-                        `).join('')}
+                            <td style="color: ${statusColor}; font-weight: bold;">${statusText}</td>
+                        </tr>`;
+                        }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -8260,22 +8422,40 @@ if (temp >= minTemp && temp <= maxTemp) {
             return '-';
         }
 
-        // v10.2: Smart status detection using stored limits or inference
+        // v10.2.0: Smart status detection using stored limits, category, or inference
         function getDataViewTempStatusSmart(record, equipment) {
             const t = parseFloat(record.temperature);
             if (isNaN(t)) return '-';
 
-            // 1. Try equipment type first
+            // 1. Try equipment type first (fridge/freezer/hot)
             if (equipment?.type) {
+                // For fridge/display, also check category for specific limits
+                if ((equipment.type === 'fridge' || equipment.type === 'display') && equipment.category) {
+                    const categoryTemps = EQUIPMENT_CATEGORY_TEMPS[equipment.category];
+                    if (categoryTemps) {
+                        return (t >= categoryTemps.min && t <= categoryTemps.max) ? 'ΟΚ' : 'ΕΚΤΟΣ';
+                    }
+                }
                 return getDataViewTempStatus(t, equipment.type);
             }
 
-            // 2. Try stored min/max temps in record
+            // 2. Try equipment category (vegetables, dairy, hot_general, etc.)
+            if (equipment?.category && EQUIPMENT_CATEGORY_TEMPS[equipment.category]) {
+                const categoryTemps = EQUIPMENT_CATEGORY_TEMPS[equipment.category];
+                return (t >= categoryTemps.min && t <= categoryTemps.max) ? 'ΟΚ' : 'ΕΚΤΟΣ';
+            }
+
+            // 3. Try equipment stored min/max temps
+            if (equipment?.minTemp !== undefined && equipment?.maxTemp !== undefined) {
+                return (t >= equipment.minTemp && t <= equipment.maxTemp) ? 'ΟΚ' : 'ΕΚΤΟΣ';
+            }
+
+            // 4. Try stored min/max temps in record
             if (record.minTemp !== undefined && record.maxTemp !== undefined) {
                 return (t >= record.minTemp && t <= record.maxTemp) ? 'ΟΚ' : 'ΕΚΤΟΣ';
             }
 
-            // 3. Infer from temperature value
+            // 5. Infer from temperature value (fallback)
             if (t < -10) {
                 // Freezer range
                 return (t >= -22 && t <= -18) ? 'ΟΚ' : 'ΕΚΤΟΣ';
