@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v10.2.2 - Σύστημα Ελέγχου Υγιεινής</title>
+    <title>Hygiene Pro v10.2.3 - Σύστημα Ελέγχου Υγιεινής</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -5827,25 +5827,41 @@
                     return;
                 }
 
-                // Check each scheduled cleaning hour
-                systemData.cleaningSettings.autoTickHours.forEach(scheduledHour => {
+                // v10.2.3: Check if today has afternoon hours
+                const hasAfternoon = daySchedule.afternoon === true;
+                console.log(`📅 [v10.2.3] Day ${dayOfWeek} hasAfternoon: ${hasAfternoon}`);
+
+                // v10.2.3: Build TODAY's effective hours based on morning/afternoon availability
+                const items = systemData.cleaningSettings?.items || [];
+                const todayHours = [...new Set(items.map(item => {
+                    // If day has NO afternoon AND item has morningOnlyTime → use it
+                    // Otherwise → use normal time (fallback for existing customers)
+                    if (!hasAfternoon && item.morningOnlyTime) {
+                        return item.morningOnlyTime;
+                    }
+                    return item.time;
+                }))].sort();
+
+                console.log(`🕐 [v10.2.3] Today's effective hours:`, todayHours);
+
+                // Check each scheduled cleaning hour for TODAY
+                todayHours.forEach(scheduledHour => {
                     const currentHourStr = String(now.getHours()).padStart(2, '0');
                     const scheduledHourStr = scheduledHour.split(':')[0];
-                    
+
                     // Match if current hour >= scheduled hour (within the same minute range)
                     if (currentHourStr === scheduledHourStr) {
                         // Check if this cleaning record already exists
-                        const cleaningExists = systemData.cleaning.some(c => 
+                        const cleaningExists = systemData.cleaning.some(c =>
                             c.date === dateStr && c.time === scheduledHour && c.auto === true
                         );
-                        
+
                         if (!cleaningExists) {
-                            console.log(`✅ [v10.0] Auto-creating cleaning record for ${scheduledHour} with EFET data`);
-                            
+                            console.log(`✅ [v10.2.3] Auto-creating cleaning record for ${scheduledHour} (hasAfternoon: ${hasAfternoon})`);
+
                             // v10.0: Get items and default responsible
-                            const items = systemData.cleaningSettings?.items || [];
                             const defaultResponsible = systemData.businessInfo?.owner || '';
-                            
+
                             // Create cleaning record with EFET data
                             const cleaningRecord = {
                                 id: Date.now() + Math.random(),
@@ -5855,8 +5871,13 @@
                                 responsible: defaultResponsible
                             };
 
-                            // v10.0: Add items with EFET data
-                            const itemsForHour = items.filter(item => item.time === scheduledHour);
+                            // v10.2.3: Find items for this hour based on afternoon availability
+                            const itemsForHour = items.filter(item => {
+                                if (!hasAfternoon && item.morningOnlyTime) {
+                                    return item.morningOnlyTime === scheduledHour;
+                                }
+                                return item.time === scheduledHour;
+                            });
                             const itemsToProcess = itemsForHour.length > 0 ? itemsForHour : items;
                             
                             if (itemsToProcess.length > 0) {
@@ -9532,10 +9553,17 @@ if (temp >= minTemp && temp <= maxTemp) {
                 <div style="padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #667eea;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <span style="font-weight: 600; font-size: 1.05rem;">🧹 ${item.name}</span>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="color: #666;">🕐</span>
-                            <input type="time" value="${item.time || '20:00'}" onchange="updateCleaningItemTime(${idx}, this.value)" class="form-input" style="margin: 0; padding: 5px 10px; width: 110px;">
-                            <button class="btn btn-danger" onclick="removeCleaningItem(${idx})" style="padding: 6px 12px;">✕</button>
+                        <button class="btn btn-danger" onclick="removeCleaningItem(${idx})" style="padding: 6px 12px;">✕</button>
+                    </div>
+                    <!-- v10.2.3: Δύο ώρες - κανονική και μόνο πρωί -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
+                        <div>
+                            <label style="font-size: 0.8rem; color: #1565c0; display: block; margin-bottom: 4px;">🕐 Ώρα (κανονική)</label>
+                            <input type="time" value="${item.time || '20:00'}" onchange="updateCleaningItemTime(${idx}, this.value)" class="form-input" style="margin: 0; padding: 5px 10px; width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem; color: #f57c00; display: block; margin-bottom: 4px;">🌅 Ώρα (μόνο πρωί)</label>
+                            <input type="time" value="${item.morningOnlyTime || ''}" onchange="updateCleaningItemMorningTime(${idx}, this.value)" class="form-input" style="margin: 0; padding: 5px 10px; width: 100%;" placeholder="Προαιρετικό">
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px; font-size: 0.9rem;">
@@ -9701,16 +9729,25 @@ if (temp >= minTemp && temp <= maxTemp) {
         function updateCleaningItemTime(idx, newTime) {
             if (systemData.cleaningSettings?.items?.[idx]) {
                 systemData.cleaningSettings.items[idx].time = newTime;
-                
+
                 // ✅ SYNC: Ενημέρωση autoTickHours αμέσως
                 const uniqueHours = [...new Set(systemData.cleaningSettings.items.map(i => i.time))].sort();
                 systemData.cleaningSettings.autoTickHours = uniqueHours;
                 console.log('✅ [updateCleaningItemTime] Updated autoTickHours:', uniqueHours);
-                
+
                 updateProgramDisplay();
             }
         }
-        
+
+        // v10.2.3: Ενημέρωση ώρας για μέρες με μόνο πρωί
+        function updateCleaningItemMorningTime(idx, newTime) {
+            if (systemData.cleaningSettings?.items?.[idx]) {
+                systemData.cleaningSettings.items[idx].morningOnlyTime = newTime;
+                console.log('✅ [updateCleaningItemMorningTime] Updated morningOnlyTime for item', idx, ':', newTime);
+                updateProgramDisplay();
+            }
+        }
+
         // v9.1: Διαγραφή πεδίου
         function removeCleaningItem(idx) {
             if (confirm('Διαγραφή πεδίου καθαριότητας;')) {
