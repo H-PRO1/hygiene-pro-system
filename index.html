@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v10.2.3 - Σύστημα Ελέγχου Υγιεινής</title>
+    <title>Hygiene Pro v10.2.4 - Σύστημα Ελέγχου Υγιεινής</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -5827,11 +5827,11 @@
                     return;
                 }
 
-                // v10.2.3: Check if today has afternoon hours
+                // v10.2.4: Check if today has afternoon hours
                 const hasAfternoon = daySchedule.afternoon === true;
-                console.log(`📅 [v10.2.3] Day ${dayOfWeek} hasAfternoon: ${hasAfternoon}`);
+                console.log(`📅 [v10.2.4] Day ${dayOfWeek} hasAfternoon: ${hasAfternoon}`);
 
-                // v10.2.3: Build TODAY's effective hours based on morning/afternoon availability
+                // v10.2.4: Build TODAY's effective hours based on morning/afternoon availability
                 const items = systemData.cleaningSettings?.items || [];
                 const todayHours = [...new Set(items.map(item => {
                     // If day has NO afternoon AND item has morningOnlyTime → use it
@@ -5842,22 +5842,28 @@
                     return item.time;
                 }))].sort();
 
-                console.log(`🕐 [v10.2.3] Today's effective hours:`, todayHours);
+                console.log(`🕐 [v10.2.4] Today's effective hours:`, todayHours);
 
                 // Check each scheduled cleaning hour for TODAY
                 todayHours.forEach(scheduledHour => {
-                    const currentHourStr = String(now.getHours()).padStart(2, '0');
-                    const scheduledHourStr = scheduledHour.split(':')[0];
+                    // v10.2.4: Catch-up logic - αν η ώρα έχει περάσει, κάνε την καταγραφή όταν ανοίξει η εφαρμογή
+                    const currentHour = now.getHours();
+                    const currentMinute = now.getMinutes();
+                    const [scheduledH, scheduledM] = scheduledHour.split(':').map(Number);
 
-                    // Match if current hour >= scheduled hour (within the same minute range)
-                    if (currentHourStr === scheduledHourStr) {
+                    // Μετατροπή σε λεπτά για σύγκριση
+                    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+                    const scheduledTimeInMinutes = scheduledH * 60 + scheduledM;
+
+                    // Η τρέχουσα ώρα πρέπει να είναι >= της προγραμματισμένης (catch-up)
+                    if (currentTimeInMinutes >= scheduledTimeInMinutes) {
                         // Check if this cleaning record already exists
                         const cleaningExists = systemData.cleaning.some(c =>
                             c.date === dateStr && c.time === scheduledHour && c.auto === true
                         );
 
                         if (!cleaningExists) {
-                            console.log(`✅ [v10.2.3] Auto-creating cleaning record for ${scheduledHour} (hasAfternoon: ${hasAfternoon})`);
+                            console.log(`✅ [v10.2.4] Auto-creating cleaning record for ${scheduledHour} (catch-up: ${currentTimeInMinutes > scheduledTimeInMinutes})`);
 
                             // v10.0: Get items and default responsible
                             const defaultResponsible = systemData.businessInfo?.owner || '';
@@ -5871,7 +5877,7 @@
                                 responsible: defaultResponsible
                             };
 
-                            // v10.2.3: Find items for this hour based on afternoon availability
+                            // v10.2.4: Find items for this hour based on afternoon availability
                             const itemsForHour = items.filter(item => {
                                 if (!hasAfternoon && item.morningOnlyTime) {
                                     return item.morningOnlyTime === scheduledHour;
@@ -9555,7 +9561,7 @@ if (temp >= minTemp && temp <= maxTemp) {
                         <span style="font-weight: 600; font-size: 1.05rem;">🧹 ${item.name}</span>
                         <button class="btn btn-danger" onclick="removeCleaningItem(${idx})" style="padding: 6px 12px;">✕</button>
                     </div>
-                    <!-- v10.2.3: Δύο ώρες - κανονική και μόνο πρωί -->
+                    <!-- v10.2.4: Δύο ώρες - κανονική και μόνο πρωί -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
                         <div>
                             <label style="font-size: 0.8rem; color: #1565c0; display: block; margin-bottom: 4px;">🕐 Ώρα (κανονική)</label>
@@ -9739,7 +9745,7 @@ if (temp >= minTemp && temp <= maxTemp) {
             }
         }
 
-        // v10.2.3: Ενημέρωση ώρας για μέρες με μόνο πρωί
+        // v10.2.4: Ενημέρωση ώρας για μέρες με μόνο πρωί
         function updateCleaningItemMorningTime(idx, newTime) {
             if (systemData.cleaningSettings?.items?.[idx]) {
                 systemData.cleaningSettings.items[idx].morningOnlyTime = newTime;
