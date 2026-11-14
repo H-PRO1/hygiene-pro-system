@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v10.2.4 - Σύστημα Ελέγχου Υγιεινής</title>
+    <title>Hygiene Pro v10.2.5 - Σύστημα Ελέγχου Υγιεινής</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -2212,23 +2212,29 @@
         }
 
         // Check if license exists in CRM database
+        // v10.2.5: Επίσης ελέγχει αν ο πελάτης είναι σε αναστολή (suspended)
         async function checkLicenseInCRM(licenseKey) {
-            if (!db) return true; // If no Firebase, allow (offline mode)
-            
+            if (!db) return { exists: true, suspended: false }; // If no Firebase, allow (offline mode)
+
             try {
                 const snapshot = await db.collection('customers').get();
                 for (const doc of snapshot.docs) {
                     const customer = doc.data();
                     if (customer.licenseCode === licenseKey) {
-                        console.log('✅ License found in CRM');
-                        return true;
+                        // v10.2.5: Έλεγχος suspended flag
+                        if (customer.suspended === true) {
+                            console.log('⏸️ License found but SUSPENDED in CRM');
+                            return { exists: true, suspended: true };
+                        }
+                        console.log('✅ License found in CRM (active)');
+                        return { exists: true, suspended: false };
                     }
                 }
                 console.log('❌ License NOT found in CRM');
-                return false;
+                return { exists: false, suspended: false };
             } catch (e) {
                 console.log('⚠️ CRM check error:', e);
-                return true; // On error, allow (offline mode)
+                return { exists: true, suspended: false }; // On error, allow (offline mode)
             }
         }
 
@@ -3617,10 +3623,15 @@
             }
             
             // ☁️ Check if license exists in CRM
+            // v10.2.5: Έλεγχος και για suspended status
             if (firebaseReady) {
-                const existsInCRM = await checkLicenseInCRM(key);
-                if (!existsInCRM) {
+                const crmStatus = await checkLicenseInCRM(key);
+                if (!crmStatus.exists) {
                     showLicenseError('Ο κωδικός δεν βρέθηκε στο σύστημα. Επικοινωνήστε με τον πάροχο.');
+                    return;
+                }
+                if (crmStatus.suspended) {
+                    showLicenseError('Η συνδρομή σας έχει ανασταλεί. Επικοινωνήστε με τον πάροχο για ενεργοποίηση.');
                     return;
                 }
             }
@@ -3848,17 +3859,28 @@
                 await loadFromFirebaseIfNeeded();
                 
                 // Check if customer still exists in CRM
-                const existsInCRM = await checkLicenseInCRM(systemData.license.key);
-                if (!existsInCRM) {
+                // v10.2.5: Έλεγχος και για suspended status
+                const crmStatus = await checkLicenseInCRM(systemData.license.key);
+                if (!crmStatus.exists) {
                     // 🛡️ v10.0.6 PROTECTION: ΔΕΝ διαγράφουμε δεδομένα - μόνο κλείδωμα!
                     console.log('⚠️ Customer not found in CRM - LOCKING (NOT deleting data!)');
-                    // ΔΕΝ κάνουμε: delete systemData.license;
-                    // ΔΕΝ κάνουμε: systemData.setupComplete = false;
-                    // ΔΕΝ κάνουμε: saveData();
                     document.getElementById('licenseActivation').classList.add('active');
-                    showAlert('⚠️ Πρόβλημα Άδειας', 
+                    showAlert('⚠️ Πρόβλημα Άδειας',
                         'Δεν βρέθηκε η άδειά σας στο σύστημα.\n\n' +
                         'Επικοινωνήστε: hygieneprohellas@gmail.com\n\n' +
+                        '⚠️ Τα δεδομένα σας ΔΕΝ έχουν διαγραφεί.', 'warning');
+                    return;
+                }
+
+                // v10.2.5: Έλεγχος αν ο πελάτης είναι σε αναστολή
+                if (crmStatus.suspended) {
+                    console.log('⏸️ Customer SUSPENDED - LOCKING');
+                    document.getElementById('licenseActivation').classList.add('active');
+                    showAlert('⏸️ Συνδρομή σε Αναστολή',
+                        'Η συνδρομή σας έχει ανασταλεί.\n\n' +
+                        'Επικοινωνήστε με τον πάροχο για ενεργοποίηση:\n' +
+                        '📧 hygieneprohellas@gmail.com\n' +
+                        '📞 6945770219\n\n' +
                         '⚠️ Τα δεδομένα σας ΔΕΝ έχουν διαγραφεί.', 'warning');
                     return;
                 }
@@ -5827,11 +5849,11 @@
                     return;
                 }
 
-                // v10.2.4: Check if today has afternoon hours
+                // v10.2.5: Check if today has afternoon hours
                 const hasAfternoon = daySchedule.afternoon === true;
-                console.log(`📅 [v10.2.4] Day ${dayOfWeek} hasAfternoon: ${hasAfternoon}`);
+                console.log(`📅 [v10.2.5] Day ${dayOfWeek} hasAfternoon: ${hasAfternoon}`);
 
-                // v10.2.4: Build TODAY's effective hours based on morning/afternoon availability
+                // v10.2.5: Build TODAY's effective hours based on morning/afternoon availability
                 const items = systemData.cleaningSettings?.items || [];
                 const todayHours = [...new Set(items.map(item => {
                     // If day has NO afternoon AND item has morningOnlyTime → use it
@@ -5842,11 +5864,11 @@
                     return item.time;
                 }))].sort();
 
-                console.log(`🕐 [v10.2.4] Today's effective hours:`, todayHours);
+                console.log(`🕐 [v10.2.5] Today's effective hours:`, todayHours);
 
                 // Check each scheduled cleaning hour for TODAY
                 todayHours.forEach(scheduledHour => {
-                    // v10.2.4: Catch-up logic - αν η ώρα έχει περάσει, κάνε την καταγραφή όταν ανοίξει η εφαρμογή
+                    // v10.2.5: Catch-up logic - αν η ώρα έχει περάσει, κάνε την καταγραφή όταν ανοίξει η εφαρμογή
                     const currentHour = now.getHours();
                     const currentMinute = now.getMinutes();
                     const [scheduledH, scheduledM] = scheduledHour.split(':').map(Number);
@@ -5863,7 +5885,7 @@
                         );
 
                         if (!cleaningExists) {
-                            console.log(`✅ [v10.2.4] Auto-creating cleaning record for ${scheduledHour} (catch-up: ${currentTimeInMinutes > scheduledTimeInMinutes})`);
+                            console.log(`✅ [v10.2.5] Auto-creating cleaning record for ${scheduledHour} (catch-up: ${currentTimeInMinutes > scheduledTimeInMinutes})`);
 
                             // v10.0: Get items and default responsible
                             const defaultResponsible = systemData.businessInfo?.owner || '';
@@ -5877,7 +5899,7 @@
                                 responsible: defaultResponsible
                             };
 
-                            // v10.2.4: Find items for this hour based on afternoon availability
+                            // v10.2.5: Find items for this hour based on afternoon availability
                             const itemsForHour = items.filter(item => {
                                 if (!hasAfternoon && item.morningOnlyTime) {
                                     return item.morningOnlyTime === scheduledHour;
@@ -9561,7 +9583,7 @@ if (temp >= minTemp && temp <= maxTemp) {
                         <span style="font-weight: 600; font-size: 1.05rem;">🧹 ${item.name}</span>
                         <button class="btn btn-danger" onclick="removeCleaningItem(${idx})" style="padding: 6px 12px;">✕</button>
                     </div>
-                    <!-- v10.2.4: Δύο ώρες - κανονική και μόνο πρωί -->
+                    <!-- v10.2.5: Δύο ώρες - κανονική και μόνο πρωί -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
                         <div>
                             <label style="font-size: 0.8rem; color: #1565c0; display: block; margin-bottom: 4px;">🕐 Ώρα (κανονική)</label>
@@ -9745,7 +9767,7 @@ if (temp >= minTemp && temp <= maxTemp) {
             }
         }
 
-        // v10.2.4: Ενημέρωση ώρας για μέρες με μόνο πρωί
+        // v10.2.5: Ενημέρωση ώρας για μέρες με μόνο πρωί
         function updateCleaningItemMorningTime(idx, newTime) {
             if (systemData.cleaningSettings?.items?.[idx]) {
                 systemData.cleaningSettings.items[idx].morningOnlyTime = newTime;
