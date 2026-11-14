@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v10.2.8 - Σύστημα Ελέγχου Υγιεινής</title>
+    <title>Hygiene Pro System</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -2212,13 +2212,13 @@
         }
 
         // Check if customer exists in CRM database
-        // v10.2.8: Ψάχνει με ΤΗΛΕΦΩΝΟ (όχι κωδικό) για να μην κλειδώνει μετά από ανανέωση
-        // v10.2.8: Επίσης ελέγχει αν ο πελάτης είναι σε αναστολή (suspended)
+        // v10.2.9: Ψάχνει με ΤΗΛΕΦΩΝΟ (όχι κωδικό) για να μην κλειδώνει μετά από ανανέωση
+        // v10.2.9: Επίσης ελέγχει αν ο πελάτης είναι σε αναστολή (suspended)
         async function checkLicenseInCRM(licenseKey) {
             if (!db) return { exists: true, suspended: false }; // If no Firebase, allow (offline mode)
 
             try {
-                // v10.2.8: Παίρνουμε το τηλέφωνο από το τοπικό license
+                // v10.2.9: Παίρνουμε το τηλέφωνο από το τοπικό license
                 const currentPhone = (systemData.license?.phone || '').replace(/\D/g, '');
 
                 const snapshot = await db.collection('customers').get();
@@ -2226,10 +2226,10 @@
                     const customer = doc.data();
                     const crmPhone = (customer.phone || '').replace(/\D/g, '');
 
-                    // v10.2.8: Ψάχνουμε με ΤΗΛΕΦΩΝΟ αντί για κωδικό
+                    // v10.2.9: Ψάχνουμε με ΤΗΛΕΦΩΝΟ αντί για κωδικό
                     // Έτσι αν ο κωδικός άλλαξε (ανανέωση), ο πελάτης ΔΕΝ κλειδώνεται
                     if (crmPhone === currentPhone && currentPhone.length > 0) {
-                        // v10.2.8: Έλεγχος suspended flag
+                        // v10.2.9: Έλεγχος suspended flag
                         if (customer.suspended === true) {
                             console.log('⏸️ Customer found but SUSPENDED in CRM');
                             return { exists: true, suspended: true };
@@ -3645,7 +3645,7 @@
             }
             
             // ☁️ Check if license exists in CRM
-            // v10.2.8: Έλεγχος και για suspended status
+            // v10.2.9: Έλεγχος και για suspended status
             if (firebaseReady) {
                 const crmStatus = await checkLicenseInCRM(key);
                 if (!crmStatus.exists) {
@@ -3881,7 +3881,7 @@
                 await loadFromFirebaseIfNeeded();
                 
                 // Check if customer still exists in CRM
-                // v10.2.8: Έλεγχος και για suspended status
+                // v10.2.9: Έλεγχος και για suspended status
                 const crmStatus = await checkLicenseInCRM(systemData.license.key);
                 if (!crmStatus.exists) {
                     // 🛡️ v10.0.6 PROTECTION: ΔΕΝ διαγράφουμε δεδομένα - μόνο κλείδωμα!
@@ -3894,7 +3894,7 @@
                     return;
                 }
 
-                // v10.2.8: Έλεγχος αν ο πελάτης είναι σε αναστολή
+                // v10.2.9: Έλεγχος αν ο πελάτης είναι σε αναστολή
                 if (crmStatus.suspended) {
                     console.log('⏸️ Customer SUSPENDED - LOCKING');
                     document.getElementById('licenseActivation').classList.add('active');
@@ -5871,11 +5871,11 @@
                     return;
                 }
 
-                // v10.2.8: Check if today has afternoon hours
+                // v10.2.9: Check if today has afternoon hours
                 const hasAfternoon = daySchedule.afternoon === true;
-                console.log(`📅 [v10.2.8] Day ${dayOfWeek} hasAfternoon: ${hasAfternoon}`);
+                console.log(`📅 [v10.2.9] Day ${dayOfWeek} hasAfternoon: ${hasAfternoon}`);
 
-                // v10.2.8: Build TODAY's effective hours based on morning/afternoon availability
+                // v10.2.9: Build TODAY's effective hours based on morning/afternoon availability
                 const items = systemData.cleaningSettings?.items || [];
                 const todayHours = [...new Set(items.map(item => {
                     // If day has NO afternoon AND item has morningOnlyTime → use it
@@ -5886,11 +5886,11 @@
                     return item.time;
                 }))].sort();
 
-                console.log(`🕐 [v10.2.8] Today's effective hours:`, todayHours);
+                console.log(`🕐 [v10.2.9] Today's effective hours:`, todayHours);
 
                 // Check each scheduled cleaning hour for TODAY
                 todayHours.forEach(scheduledHour => {
-                    // v10.2.8: Catch-up logic - αν η ώρα έχει περάσει, κάνε την καταγραφή όταν ανοίξει η εφαρμογή
+                    // v10.2.9: Catch-up logic - αν η ώρα έχει περάσει, κάνε την καταγραφή όταν ανοίξει η εφαρμογή
                     const currentHour = now.getHours();
                     const currentMinute = now.getMinutes();
                     const [scheduledH, scheduledM] = scheduledHour.split(':').map(Number);
@@ -5907,7 +5907,7 @@
                         );
 
                         if (!cleaningExists) {
-                            console.log(`✅ [v10.2.8] Auto-creating cleaning record for ${scheduledHour} (catch-up: ${currentTimeInMinutes > scheduledTimeInMinutes})`);
+                            console.log(`✅ [v10.2.9] Auto-creating cleaning record for ${scheduledHour} (catch-up: ${currentTimeInMinutes > scheduledTimeInMinutes})`);
 
                             // v10.0: Get items and default responsible
                             const defaultResponsible = systemData.businessInfo?.owner || '';
@@ -5921,7 +5921,7 @@
                                 responsible: defaultResponsible
                             };
 
-                            // v10.2.8: Find items for this hour based on afternoon availability
+                            // v10.2.9: Find items for this hour based on afternoon availability
                             const itemsForHour = items.filter(item => {
                                 if (!hasAfternoon && item.morningOnlyTime) {
                                     return item.morningOnlyTime === scheduledHour;
@@ -8205,32 +8205,144 @@ if (temp >= minTemp && temp <= maxTemp) {
             if (!systemData.businessInfo.monthsToKeep) {
                 systemData.businessInfo.monthsToKeep = 6;
             }
-            
+
             const monthsToKeep = systemData.businessInfo.monthsToKeep;
             const cutoffDate = new Date();
             cutoffDate.setMonth(cutoffDate.getMonth() - monthsToKeep);
             const cutoffStr = formatDate(cutoffDate);
-            
+
+            // v10.2.9: Βρες τα δεδομένα που θα διαγραφούν
+            const oldTemps = systemData.temperatures.filter(t => t.date < cutoffStr);
+            const oldClean = systemData.cleaning.filter(c => c.date < cutoffStr);
+            const totalOld = oldTemps.length + oldClean.length;
+
+            // v10.2.9: Αν υπάρχουν δεδομένα προς διαγραφή, κάνε AUTO-BACKUP πρώτα!
+            if (totalOld > 0) {
+                console.log(`📦 [v10.2.9] Auto-backup πριν cleanup: ${totalOld} εγγραφές`);
+                createCleanupBackup(oldTemps, oldClean, cutoffStr);
+            }
+
             const beforeCount = systemData.temperatures.length + systemData.cleaning.length;
-            
+
             systemData.temperatures = systemData.temperatures.filter(t => {
                 const dateStr = t.date;
                 return dateStr >= cutoffStr;
             });
-            
+
             systemData.cleaning = systemData.cleaning.filter(c => {
                 const dateStr = c.date;
                 return dateStr >= cutoffStr;
             });
-            
+
             const afterCount = systemData.temperatures.length + systemData.cleaning.length;
             const deleted = beforeCount - afterCount;
-            
+
             if (deleted > 0) {
-                console.log(`Auto-cleanup: Διαγράφηκαν ${deleted} παλιές καταγραφές (>${monthsToKeep} μήνες)`);
+                console.log(`✅ [v10.2.9] Auto-cleanup: Διαγράφηκαν ${deleted} παλιές καταγραφές (>${monthsToKeep} μήνες)`);
             }
-            
+
             saveData();
+        }
+
+        // v10.2.9: Δημιουργία backup ΠΡΙΝ τη διαγραφή παλιών δεδομένων
+        function createCleanupBackup(oldTemps, oldClean, cutoffStr) {
+            try {
+                const businessName = systemData.businessInfo?.name || 'H-PRO';
+                const safeName = businessName.replace(/[^a-zA-Z0-9α-ωά-ώΑ-ΩΆ-Ώ\s]/g, '').trim();
+                const today = new Date().toISOString().split('T')[0];
+
+                // Βρες το εύρος ημερομηνιών
+                const allDates = [...oldTemps.map(t => t.date), ...oldClean.map(c => c.date)].sort();
+                const fromDate = allDates[0] || 'N/A';
+                const toDate = cutoffStr;
+
+                // Δημιουργία HTML backup
+                let html = `<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Hygiene Pro System - Αρχείο Backup</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #667eea; text-align: center; }
+        .info { background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background: #667eea; color: white; padding: 12px; text-align: left; }
+        td { border: 1px solid #ddd; padding: 10px; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .section { margin-top: 30px; }
+        .badge { background: #667eea; color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; }
+        @media print { body { background: white; } .container { box-shadow: none; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Hygiene Pro System - Αρχείο Backup</h1>
+        <div class="info">
+            <strong>🏢 Επιχείρηση:</strong> ${businessName}<br>
+            <strong>📅 Περίοδος:</strong> ${fromDate} έως ${toDate}<br>
+            <strong>📊 Εγγραφές:</strong> ${oldTemps.length} θερμοκρασίες, ${oldClean.length} καθαριότητα<br>
+            <strong>🕐 Ημ/νία Backup:</strong> ${new Date().toLocaleString('el-GR')}<br>
+            <span class="badge">Auto-Backup πριν Cleanup</span>
+        </div>`;
+
+                // Πίνακας θερμοκρασιών
+                if (oldTemps.length > 0) {
+                    html += `
+        <div class="section">
+            <h2>🌡️ Θερμοκρασίες (${oldTemps.length})</h2>
+            <table>
+                <thead><tr><th>Ημ/νία</th><th>Ώρα</th><th>Εξοπλισμός</th><th>°C</th><th>Κατάσταση</th></tr></thead>
+                <tbody>`;
+                    oldTemps.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
+                    oldTemps.forEach(t => {
+                        html += `<tr><td>${t.date}</td><td>${t.time}</td><td>${t.equipment || '-'}</td><td>${t.value}°C</td><td>${t.status || '-'}</td></tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                }
+
+                // Πίνακας καθαριότητας
+                if (oldClean.length > 0) {
+                    html += `
+        <div class="section">
+            <h2>🧹 Καθαριότητα (${oldClean.length})</h2>
+            <table>
+                <thead><tr><th>Ημ/νία</th><th>Ώρα</th><th>Εργασίες</th><th>Υπεύθυνος</th></tr></thead>
+                <tbody>`;
+                    oldClean.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
+                    oldClean.forEach(c => {
+                        const fields = Object.keys(c).filter(k => k.startsWith('field_')).map(k => k.replace('field_', '')).join(', ');
+                        html += `<tr><td>${c.date}</td><td>${c.time}</td><td>${fields || '-'}</td><td>${c.responsible || '-'}</td></tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                }
+
+                html += `
+        <div style="text-align: center; margin-top: 30px; color: #666;">
+            <p>© 2026 Hygiene Pro System - Αυτόματο Backup πριν Cleanup</p>
+        </div>
+    </div>
+</body>
+</html>`;
+
+                // Download
+                const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `HPRO_Backup_${safeName}_${fromDate}_${toDate}.html`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                console.log('✅ [v10.2.9] Cleanup backup created:', link.download);
+                showNotification(`📦 Backup δημιουργήθηκε (${oldTemps.length + oldClean.length} εγγραφές)`);
+
+            } catch (error) {
+                console.error('❌ Cleanup backup error:', error);
+            }
         }
 
         function saveData() {
@@ -9066,7 +9178,7 @@ if (temp >= minTemp && temp <= maxTemp) {
                 saveData();
             }
 
-            // v10.2.8: AUTO-UPGRADE παλιών καθαριστικών Diversey/Ecolab → SEPTOFORTE/LACIP/DESTRAL
+            // v10.2.9: AUTO-UPGRADE παλιών καθαριστικών Diversey/Ecolab → SEPTOFORTE/LACIP/DESTRAL
             if (systemData.cleaningSettings?.items && systemData.cleaningSettings.items.length > 0) {
                 let upgraded = false;
                 systemData.cleaningSettings.items.forEach(item => {
@@ -9094,7 +9206,7 @@ if (temp >= minTemp && temp <= maxTemp) {
                     }
                 });
                 if (upgraded) {
-                    console.log('✅ [v10.2.8] AUTO-UPGRADED old cleaning products to SEPTOFORTE/LACIP/DESTRAL');
+                    console.log('✅ [v10.2.9] AUTO-UPGRADED old cleaning products to SEPTOFORTE/LACIP/DESTRAL');
                     saveData();
                 }
             }
@@ -9220,7 +9332,7 @@ if (temp >= minTemp && temp <= maxTemp) {
         // ============================================
         // 🧹 v10.0: EFET CLEANING DATA - ΕΠΑΓΓΕΛΜΑΤΙΚΑ ΚΑΘΑΡΙΣΤΙΚΑ
         // ============================================
-        // v10.2.8: Default καθαριστικά: SEPTOFORTE 20, LACIP UNIVERSAL, DESTRAL ACTIVE
+        // v10.2.9: Default καθαριστικά: SEPTOFORTE 20, LACIP UNIVERSAL, DESTRAL ACTIVE
         const EFET_CLEANING_DATA = {
             'Πάγκοι Εργασίας': {
                 suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
@@ -9640,7 +9752,7 @@ if (temp >= minTemp && temp <= maxTemp) {
                         <span style="font-weight: 600; font-size: 1.05rem;">🧹 ${item.name}</span>
                         <button class="btn btn-danger" onclick="removeCleaningItem(${idx})" style="padding: 6px 12px;">✕</button>
                     </div>
-                    <!-- v10.2.8: Δύο ώρες - κανονική και μόνο πρωί -->
+                    <!-- v10.2.9: Δύο ώρες - κανονική και μόνο πρωί -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
                         <div>
                             <label style="font-size: 0.8rem; color: #1565c0; display: block; margin-bottom: 4px;">🕐 Ώρα (κανονική)</label>
@@ -9824,7 +9936,7 @@ if (temp >= minTemp && temp <= maxTemp) {
             }
         }
 
-        // v10.2.8: Ενημέρωση ώρας για μέρες με μόνο πρωί
+        // v10.2.9: Ενημέρωση ώρας για μέρες με μόνο πρωί
         function updateCleaningItemMorningTime(idx, newTime) {
             if (systemData.cleaningSettings?.items?.[idx]) {
                 systemData.cleaningSettings.items[idx].morningOnlyTime = newTime;
