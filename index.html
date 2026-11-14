@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v10.2.7 - Σύστημα Ελέγχου Υγιεινής</title>
+    <title>Hygiene Pro v10.2.8 - Σύστημα Ελέγχου Υγιεινής</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -2212,13 +2212,13 @@
         }
 
         // Check if customer exists in CRM database
-        // v10.2.7: Ψάχνει με ΤΗΛΕΦΩΝΟ (όχι κωδικό) για να μην κλειδώνει μετά από ανανέωση
-        // v10.2.7: Επίσης ελέγχει αν ο πελάτης είναι σε αναστολή (suspended)
+        // v10.2.8: Ψάχνει με ΤΗΛΕΦΩΝΟ (όχι κωδικό) για να μην κλειδώνει μετά από ανανέωση
+        // v10.2.8: Επίσης ελέγχει αν ο πελάτης είναι σε αναστολή (suspended)
         async function checkLicenseInCRM(licenseKey) {
             if (!db) return { exists: true, suspended: false }; // If no Firebase, allow (offline mode)
 
             try {
-                // v10.2.7: Παίρνουμε το τηλέφωνο από το τοπικό license
+                // v10.2.8: Παίρνουμε το τηλέφωνο από το τοπικό license
                 const currentPhone = (systemData.license?.phone || '').replace(/\D/g, '');
 
                 const snapshot = await db.collection('customers').get();
@@ -2226,10 +2226,10 @@
                     const customer = doc.data();
                     const crmPhone = (customer.phone || '').replace(/\D/g, '');
 
-                    // v10.2.7: Ψάχνουμε με ΤΗΛΕΦΩΝΟ αντί για κωδικό
+                    // v10.2.8: Ψάχνουμε με ΤΗΛΕΦΩΝΟ αντί για κωδικό
                     // Έτσι αν ο κωδικός άλλαξε (ανανέωση), ο πελάτης ΔΕΝ κλειδώνεται
                     if (crmPhone === currentPhone && currentPhone.length > 0) {
-                        // v10.2.7: Έλεγχος suspended flag
+                        // v10.2.8: Έλεγχος suspended flag
                         if (customer.suspended === true) {
                             console.log('⏸️ Customer found but SUSPENDED in CRM');
                             return { exists: true, suspended: true };
@@ -3645,7 +3645,7 @@
             }
             
             // ☁️ Check if license exists in CRM
-            // v10.2.7: Έλεγχος και για suspended status
+            // v10.2.8: Έλεγχος και για suspended status
             if (firebaseReady) {
                 const crmStatus = await checkLicenseInCRM(key);
                 if (!crmStatus.exists) {
@@ -3881,7 +3881,7 @@
                 await loadFromFirebaseIfNeeded();
                 
                 // Check if customer still exists in CRM
-                // v10.2.7: Έλεγχος και για suspended status
+                // v10.2.8: Έλεγχος και για suspended status
                 const crmStatus = await checkLicenseInCRM(systemData.license.key);
                 if (!crmStatus.exists) {
                     // 🛡️ v10.0.6 PROTECTION: ΔΕΝ διαγράφουμε δεδομένα - μόνο κλείδωμα!
@@ -3894,7 +3894,7 @@
                     return;
                 }
 
-                // v10.2.7: Έλεγχος αν ο πελάτης είναι σε αναστολή
+                // v10.2.8: Έλεγχος αν ο πελάτης είναι σε αναστολή
                 if (crmStatus.suspended) {
                     console.log('⏸️ Customer SUSPENDED - LOCKING');
                     document.getElementById('licenseActivation').classList.add('active');
@@ -5871,11 +5871,11 @@
                     return;
                 }
 
-                // v10.2.7: Check if today has afternoon hours
+                // v10.2.8: Check if today has afternoon hours
                 const hasAfternoon = daySchedule.afternoon === true;
-                console.log(`📅 [v10.2.7] Day ${dayOfWeek} hasAfternoon: ${hasAfternoon}`);
+                console.log(`📅 [v10.2.8] Day ${dayOfWeek} hasAfternoon: ${hasAfternoon}`);
 
-                // v10.2.7: Build TODAY's effective hours based on morning/afternoon availability
+                // v10.2.8: Build TODAY's effective hours based on morning/afternoon availability
                 const items = systemData.cleaningSettings?.items || [];
                 const todayHours = [...new Set(items.map(item => {
                     // If day has NO afternoon AND item has morningOnlyTime → use it
@@ -5886,11 +5886,11 @@
                     return item.time;
                 }))].sort();
 
-                console.log(`🕐 [v10.2.7] Today's effective hours:`, todayHours);
+                console.log(`🕐 [v10.2.8] Today's effective hours:`, todayHours);
 
                 // Check each scheduled cleaning hour for TODAY
                 todayHours.forEach(scheduledHour => {
-                    // v10.2.7: Catch-up logic - αν η ώρα έχει περάσει, κάνε την καταγραφή όταν ανοίξει η εφαρμογή
+                    // v10.2.8: Catch-up logic - αν η ώρα έχει περάσει, κάνε την καταγραφή όταν ανοίξει η εφαρμογή
                     const currentHour = now.getHours();
                     const currentMinute = now.getMinutes();
                     const [scheduledH, scheduledM] = scheduledHour.split(':').map(Number);
@@ -5907,7 +5907,7 @@
                         );
 
                         if (!cleaningExists) {
-                            console.log(`✅ [v10.2.7] Auto-creating cleaning record for ${scheduledHour} (catch-up: ${currentTimeInMinutes > scheduledTimeInMinutes})`);
+                            console.log(`✅ [v10.2.8] Auto-creating cleaning record for ${scheduledHour} (catch-up: ${currentTimeInMinutes > scheduledTimeInMinutes})`);
 
                             // v10.0: Get items and default responsible
                             const defaultResponsible = systemData.businessInfo?.owner || '';
@@ -5921,7 +5921,7 @@
                                 responsible: defaultResponsible
                             };
 
-                            // v10.2.7: Find items for this hour based on afternoon availability
+                            // v10.2.8: Find items for this hour based on afternoon availability
                             const itemsForHour = items.filter(item => {
                                 if (!hasAfternoon && item.morningOnlyTime) {
                                     return item.morningOnlyTime === scheduledHour;
@@ -9050,13 +9050,13 @@ if (temp >= minTemp && temp <= maxTemp) {
                 // v9.1: Νέα δομή με items και ώρες
                 const businessType = systemData.businessInfo?.businessType || 'other';
                 const suggestions = SUGGESTED_CLEANING_ITEMS[businessType] || SUGGESTED_CLEANING_ITEMS['other'];
-                
+
                 // Δημιουργία αρχικών items από τα προτεινόμενα (τα πρώτα 4)
                 const defaultItems = suggestions.slice(0, 4).map(name => ({
                     name: name,
                     time: '20:00'
                 }));
-                
+
                 systemData.cleaningSettings = {
                     items: defaultItems,
                     // Backward compatibility
@@ -9065,6 +9065,40 @@ if (temp >= minTemp && temp <= maxTemp) {
                 };
                 saveData();
             }
+
+            // v10.2.8: AUTO-UPGRADE παλιών καθαριστικών Diversey/Ecolab → SEPTOFORTE/LACIP/DESTRAL
+            if (systemData.cleaningSettings?.items && systemData.cleaningSettings.items.length > 0) {
+                let upgraded = false;
+                systemData.cleaningSettings.items.forEach(item => {
+                    if (item.product) {
+                        const oldProduct = item.product.toLowerCase();
+                        // Αν περιέχει Diversey ή Ecolab, αλλάζουμε σε εγκεκριμένα καθαριστικά
+                        if (oldProduct.includes('diversey') || oldProduct.includes('ecolab')) {
+                            const itemName = item.name.toLowerCase();
+                            // Εργαλεία/Μαχαίρια/Κρεατομηχανή → LACIP UNIVERSAL
+                            if (itemName.includes('εργαλεία') || itemName.includes('μαχαίρ') || itemName.includes('κρεατομηχαν')) {
+                                item.product = 'LACIP UNIVERSAL';
+                                upgraded = true;
+                            }
+                            // Απολύμανση/Τουαλέτες → DESTRAL ACTIVE
+                            else if (itemName.includes('απολύμανση') || itemName.includes('τουαλέτ')) {
+                                item.product = 'DESTRAL ACTIVE';
+                                upgraded = true;
+                            }
+                            // Όλα τα υπόλοιπα → SEPTOFORTE 20
+                            else {
+                                item.product = 'SEPTOFORTE 20';
+                                upgraded = true;
+                            }
+                        }
+                    }
+                });
+                if (upgraded) {
+                    console.log('✅ [v10.2.8] AUTO-UPGRADED old cleaning products to SEPTOFORTE/LACIP/DESTRAL');
+                    saveData();
+                }
+            }
+
             updateProgramDisplay();
         }
 
@@ -9186,7 +9220,7 @@ if (temp >= minTemp && temp <= maxTemp) {
         // ============================================
         // 🧹 v10.0: EFET CLEANING DATA - ΕΠΑΓΓΕΛΜΑΤΙΚΑ ΚΑΘΑΡΙΣΤΙΚΑ
         // ============================================
-        // v10.2.7: Default καθαριστικά: SEPTOFORTE 20, LACIP UNIVERSAL, DESTRAL ACTIVE
+        // v10.2.8: Default καθαριστικά: SEPTOFORTE 20, LACIP UNIVERSAL, DESTRAL ACTIVE
         const EFET_CLEANING_DATA = {
             'Πάγκοι Εργασίας': {
                 suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
@@ -9606,7 +9640,7 @@ if (temp >= minTemp && temp <= maxTemp) {
                         <span style="font-weight: 600; font-size: 1.05rem;">🧹 ${item.name}</span>
                         <button class="btn btn-danger" onclick="removeCleaningItem(${idx})" style="padding: 6px 12px;">✕</button>
                     </div>
-                    <!-- v10.2.7: Δύο ώρες - κανονική και μόνο πρωί -->
+                    <!-- v10.2.8: Δύο ώρες - κανονική και μόνο πρωί -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
                         <div>
                             <label style="font-size: 0.8rem; color: #1565c0; display: block; margin-bottom: 4px;">🕐 Ώρα (κανονική)</label>
@@ -9790,7 +9824,7 @@ if (temp >= minTemp && temp <= maxTemp) {
             }
         }
 
-        // v10.2.7: Ενημέρωση ώρας για μέρες με μόνο πρωί
+        // v10.2.8: Ενημέρωση ώρας για μέρες με μόνο πρωί
         function updateCleaningItemMorningTime(idx, newTime) {
             if (systemData.cleaningSettings?.items?.[idx]) {
                 systemData.cleaningSettings.items[idx].morningOnlyTime = newTime;
