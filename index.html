@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro v10.2.6 - Σύστημα Ελέγχου Υγιεινής</title>
+    <title>Hygiene Pro v10.2.7 - Σύστημα Ελέγχου Υγιεινής</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -2212,13 +2212,13 @@
         }
 
         // Check if customer exists in CRM database
-        // v10.2.6: Ψάχνει με ΤΗΛΕΦΩΝΟ (όχι κωδικό) για να μην κλειδώνει μετά από ανανέωση
-        // v10.2.6: Επίσης ελέγχει αν ο πελάτης είναι σε αναστολή (suspended)
+        // v10.2.7: Ψάχνει με ΤΗΛΕΦΩΝΟ (όχι κωδικό) για να μην κλειδώνει μετά από ανανέωση
+        // v10.2.7: Επίσης ελέγχει αν ο πελάτης είναι σε αναστολή (suspended)
         async function checkLicenseInCRM(licenseKey) {
             if (!db) return { exists: true, suspended: false }; // If no Firebase, allow (offline mode)
 
             try {
-                // v10.2.6: Παίρνουμε το τηλέφωνο από το τοπικό license
+                // v10.2.7: Παίρνουμε το τηλέφωνο από το τοπικό license
                 const currentPhone = (systemData.license?.phone || '').replace(/\D/g, '');
 
                 const snapshot = await db.collection('customers').get();
@@ -2226,10 +2226,10 @@
                     const customer = doc.data();
                     const crmPhone = (customer.phone || '').replace(/\D/g, '');
 
-                    // v10.2.6: Ψάχνουμε με ΤΗΛΕΦΩΝΟ αντί για κωδικό
+                    // v10.2.7: Ψάχνουμε με ΤΗΛΕΦΩΝΟ αντί για κωδικό
                     // Έτσι αν ο κωδικός άλλαξε (ανανέωση), ο πελάτης ΔΕΝ κλειδώνεται
                     if (crmPhone === currentPhone && currentPhone.length > 0) {
-                        // v10.2.6: Έλεγχος suspended flag
+                        // v10.2.7: Έλεγχος suspended flag
                         if (customer.suspended === true) {
                             console.log('⏸️ Customer found but SUSPENDED in CRM');
                             return { exists: true, suspended: true };
@@ -3645,7 +3645,7 @@
             }
             
             // ☁️ Check if license exists in CRM
-            // v10.2.6: Έλεγχος και για suspended status
+            // v10.2.7: Έλεγχος και για suspended status
             if (firebaseReady) {
                 const crmStatus = await checkLicenseInCRM(key);
                 if (!crmStatus.exists) {
@@ -3881,7 +3881,7 @@
                 await loadFromFirebaseIfNeeded();
                 
                 // Check if customer still exists in CRM
-                // v10.2.6: Έλεγχος και για suspended status
+                // v10.2.7: Έλεγχος και για suspended status
                 const crmStatus = await checkLicenseInCRM(systemData.license.key);
                 if (!crmStatus.exists) {
                     // 🛡️ v10.0.6 PROTECTION: ΔΕΝ διαγράφουμε δεδομένα - μόνο κλείδωμα!
@@ -3894,7 +3894,7 @@
                     return;
                 }
 
-                // v10.2.6: Έλεγχος αν ο πελάτης είναι σε αναστολή
+                // v10.2.7: Έλεγχος αν ο πελάτης είναι σε αναστολή
                 if (crmStatus.suspended) {
                     console.log('⏸️ Customer SUSPENDED - LOCKING');
                     document.getElementById('licenseActivation').classList.add('active');
@@ -5871,11 +5871,11 @@
                     return;
                 }
 
-                // v10.2.6: Check if today has afternoon hours
+                // v10.2.7: Check if today has afternoon hours
                 const hasAfternoon = daySchedule.afternoon === true;
-                console.log(`📅 [v10.2.6] Day ${dayOfWeek} hasAfternoon: ${hasAfternoon}`);
+                console.log(`📅 [v10.2.7] Day ${dayOfWeek} hasAfternoon: ${hasAfternoon}`);
 
-                // v10.2.6: Build TODAY's effective hours based on morning/afternoon availability
+                // v10.2.7: Build TODAY's effective hours based on morning/afternoon availability
                 const items = systemData.cleaningSettings?.items || [];
                 const todayHours = [...new Set(items.map(item => {
                     // If day has NO afternoon AND item has morningOnlyTime → use it
@@ -5886,11 +5886,11 @@
                     return item.time;
                 }))].sort();
 
-                console.log(`🕐 [v10.2.6] Today's effective hours:`, todayHours);
+                console.log(`🕐 [v10.2.7] Today's effective hours:`, todayHours);
 
                 // Check each scheduled cleaning hour for TODAY
                 todayHours.forEach(scheduledHour => {
-                    // v10.2.6: Catch-up logic - αν η ώρα έχει περάσει, κάνε την καταγραφή όταν ανοίξει η εφαρμογή
+                    // v10.2.7: Catch-up logic - αν η ώρα έχει περάσει, κάνε την καταγραφή όταν ανοίξει η εφαρμογή
                     const currentHour = now.getHours();
                     const currentMinute = now.getMinutes();
                     const [scheduledH, scheduledM] = scheduledHour.split(':').map(Number);
@@ -5907,7 +5907,7 @@
                         );
 
                         if (!cleaningExists) {
-                            console.log(`✅ [v10.2.6] Auto-creating cleaning record for ${scheduledHour} (catch-up: ${currentTimeInMinutes > scheduledTimeInMinutes})`);
+                            console.log(`✅ [v10.2.7] Auto-creating cleaning record for ${scheduledHour} (catch-up: ${currentTimeInMinutes > scheduledTimeInMinutes})`);
 
                             // v10.0: Get items and default responsible
                             const defaultResponsible = systemData.businessInfo?.owner || '';
@@ -5921,7 +5921,7 @@
                                 responsible: defaultResponsible
                             };
 
-                            // v10.2.6: Find items for this hour based on afternoon availability
+                            // v10.2.7: Find items for this hour based on afternoon availability
                             const itemsForHour = items.filter(item => {
                                 if (!hasAfternoon && item.morningOnlyTime) {
                                     return item.morningOnlyTime === scheduledHour;
@@ -9186,150 +9186,151 @@ if (temp >= minTemp && temp <= maxTemp) {
         // ============================================
         // 🧹 v10.0: EFET CLEANING DATA - ΕΠΑΓΓΕΛΜΑΤΙΚΑ ΚΑΘΑΡΙΣΤΙΚΑ
         // ============================================
+        // v10.2.7: Default καθαριστικά: SEPTOFORTE 20, LACIP UNIVERSAL, DESTRAL ACTIVE
         const EFET_CLEANING_DATA = {
             'Πάγκοι Εργασίας': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση υπολειμμάτων → Ψεκασμός καθαριστικού-απολυμαντικού → Σκούπισμα → Στέγνωμα',
                 frequency: 'Μετά κάθε χρήση + Τέλος ημέρας',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Καθημερινά', 'Ανά 2-3 ώρες']
             },
             'Πάγκοι Κοπής': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση υπολειμμάτων → Ψεκασμός καθαριστικού-απολυμαντικού → Σκούπισμα → Στέγνωμα',
                 frequency: 'Μετά κάθε χρήση',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Ανά 2-3 ώρες']
             },
             'Πάγκοι': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση υπολειμμάτων → Ψεκασμός καθαριστικού-απολυμαντικού → Σκούπισμα → Στέγνωμα',
                 frequency: 'Μετά κάθε χρήση + Τέλος ημέρας',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Καθημερινά']
             },
             'Πάγκοι Ψαριών': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση υπολειμμάτων → Ψεκασμός καθαριστικού-απολυμαντικού → Σκούπισμα → Στέγνωμα',
                 frequency: 'Μετά κάθε χρήση + Τέλος ημέρας',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Καθημερινά']
             },
             'Πάγκοι Παρασκευής': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση υπολειμμάτων → Ψεκασμός καθαριστικού-απολυμαντικού → Σκούπισμα → Στέγνωμα',
                 frequency: 'Μετά κάθε χρήση',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Ανά 2-3 ώρες']
             },
             'Πάγκος Σερβιρίσματος': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Σκούπισμα με καθαριστικό-απολυμαντικό → Στέγνωμα',
                 frequency: 'Μετά κάθε πελάτη',
                 frequencyOptions: ['Μετά κάθε πελάτη', 'Καθημερινά']
             },
             'Ψυγεία': {
-                suggestedProducts: ['Ecolab KitchenPro Des Special', 'Diversey Suma Bac D10'],
-                defaultProduct: 'Ecolab KitchenPro Des Special',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση τροφίμων → Καθαρισμός εσωτερικού → Απολύμανση → Στέγνωμα → Επανατοποθέτηση',
                 frequency: 'Εβδομαδιαία',
                 frequencyOptions: ['Εβδομαδιαία', 'Ανά 15 ημέρες', 'Μηνιαία']
             },
             'Ψυγεία Κουζίνας': {
-                suggestedProducts: ['Ecolab KitchenPro Des Special', 'Diversey Suma Bac D10'],
-                defaultProduct: 'Ecolab KitchenPro Des Special',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση τροφίμων → Καθαρισμός εσωτερικού → Απολύμανση → Στέγνωμα',
                 frequency: 'Εβδομαδιαία',
                 frequencyOptions: ['Εβδομαδιαία', 'Ανά 15 ημέρες']
             },
             'Ψυγεία Ψαριών': {
-                suggestedProducts: ['Ecolab KitchenPro Des Special', 'Diversey Suma Bac D10'],
-                defaultProduct: 'Ecolab KitchenPro Des Special',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση τροφίμων → Καθαρισμός εσωτερικού → Απολύμανση → Στέγνωμα',
                 frequency: 'Εβδομαδιαία',
                 frequencyOptions: ['Εβδομαδιαία', 'Ανά 3 ημέρες']
             },
             'Ψυγεία Γαλακτοκομικών': {
-                suggestedProducts: ['Ecolab KitchenPro Des Special'],
-                defaultProduct: 'Ecolab KitchenPro Des Special',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση τροφίμων → Καθαρισμός εσωτερικού → Απολύμανση → Στέγνωμα',
                 frequency: 'Εβδομαδιαία',
                 frequencyOptions: ['Εβδομαδιαία', 'Ανά 15 ημέρες']
             },
             'Καταψύκτες': {
-                suggestedProducts: ['Ecolab KitchenPro Des Special', 'Diversey Suma Bac D10'],
-                defaultProduct: 'Ecolab KitchenPro Des Special',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Απόψυξη → Αφαίρεση τροφίμων → Καθαρισμός → Απολύμανση → Στέγνωμα',
                 frequency: 'Μηνιαία',
                 frequencyOptions: ['Μηνιαία', 'Ανά 15 ημέρες']
             },
             'Φούρνοι': {
-                suggestedProducts: ['Diversey Suma Grill D9'],
-                defaultProduct: 'Diversey Suma Grill D9',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση υπολειμμάτων → Ψεκασμός απολιπαντικού → Αναμονή 15\' → Τρίψιμο → Ξέπλυμα → Στέγνωμα',
                 frequency: 'Καθημερινά + Εβδομαδιαία (βαθύς)',
                 frequencyOptions: ['Καθημερινά', 'Εβδομαδιαία']
             },
             'Φούρνος': {
-                suggestedProducts: ['Diversey Suma Grill D9'],
-                defaultProduct: 'Diversey Suma Grill D9',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση υπολειμμάτων → Ψεκασμός απολιπαντικού → Αναμονή 15\' → Τρίψιμο → Ξέπλυμα → Στέγνωμα',
                 frequency: 'Καθημερινά + Εβδομαδιαία (βαθύς)',
                 frequencyOptions: ['Καθημερινά', 'Εβδομαδιαία']
             },
             'Γκριλιέρα/Ψησταριά': {
-                suggestedProducts: ['Diversey Suma Grill D9'],
-                defaultProduct: 'Diversey Suma Grill D9',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Ξύσιμο (ζεστή) → Ψεκασμός απολιπαντικού → Τρίψιμο → Ξέπλυμα',
                 frequency: 'Μετά κάθε χρήση',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Καθημερινά']
             },
             'Κουζίνα/Εστίες': {
-                suggestedProducts: ['Diversey Suma Grill D9', 'Diversey Suma Bac D10'],
-                defaultProduct: 'Diversey Suma Grill D9',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση εσχαρών → Καθαρισμός με απολιπαντικό → Απολύμανση επιφανειών',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Μετά κάθε χρήση']
             },
             'Κουζίνα': {
-                suggestedProducts: ['Diversey Suma Grill D9', 'Diversey Suma Bac D10'],
-                defaultProduct: 'Diversey Suma Grill D9',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Καθαρισμός επιφανειών → Απολίπανση → Απολύμανση',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Μετά κάθε βάρδια']
             },
             'Φριτέζες': {
-                suggestedProducts: ['Diversey Suma Break Up D3.5'],
-                defaultProduct: 'Diversey Suma Break Up D3.5',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αποστράγγιση λαδιού → Γέμισμα νερό+απολιπαντικό → Βράσιμο 10\' → Άδειασμα → Ξέπλυμα → Στέγνωμα',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Μετά κάθε αλλαγή λαδιού']
             },
             'Κρεατομηχανή': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Assert Lemon'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['LACIP UNIVERSAL', 'SEPTOFORTE 20', 'DESTRAL ACTIVE'],
+                defaultProduct: 'LACIP UNIVERSAL',
                 method: 'Αποσυναρμολόγηση → Πλύσιμο εξαρτημάτων → Ξέπλυμα → Απολύμανση → Στέγνωμα → Συναρμολόγηση',
                 frequency: 'Μετά κάθε χρήση',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Καθημερινά']
             },
             'Μαχαίρια/Εργαλεία': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Assert Lemon'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['LACIP UNIVERSAL', 'SEPTOFORTE 20', 'DESTRAL ACTIVE'],
+                defaultProduct: 'LACIP UNIVERSAL',
                 method: 'Πλύσιμο με ζεστό νερό+απορρυπαντικό → Ξέπλυμα → Απολύμανση → Στέγνωμα',
                 frequency: 'Μετά κάθε χρήση',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Καθημερινά']
             },
             'Εργαλεία': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Assert Lemon'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['LACIP UNIVERSAL', 'SEPTOFORTE 20', 'DESTRAL ACTIVE'],
+                defaultProduct: 'LACIP UNIVERSAL',
                 method: 'Πλύσιμο με ζεστό νερό+απορρυπαντικό → Ξέπλυμα → Απολύμανση → Στέγνωμα',
                 frequency: 'Μετά κάθε χρήση',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Καθημερινά']
             },
             'Μίξερ/Ζυμωτήριο': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Assert Lemon'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['LACIP UNIVERSAL', 'SEPTOFORTE 20', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αποσυναρμολόγηση → Πλύσιμο → Ξέπλυμα → Απολύμανση → Στέγνωμα → Συναρμολόγηση',
                 frequency: 'Μετά κάθε χρήση',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Καθημερινά']
@@ -9342,205 +9343,205 @@ if (temp >= minTemp && temp <= maxTemp) {
                 frequencyOptions: ['Καθημερινά', 'Μετά κάθε βάρδια']
             },
             'Πλυντήριο Πιάτων': {
-                suggestedProducts: ['Ecolab Solid Hero'],
-                defaultProduct: 'Ecolab Solid Hero',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Άδειασμα φίλτρων → Καθαρισμός εσωτερικού → Έλεγχος ακροφυσίων → Κύκλος καθαρισμού',
                 frequency: 'Καθημερινά (φίλτρα) + Εβδομαδιαία (βαθύς)',
                 frequencyOptions: ['Καθημερινά', 'Εβδομαδιαία']
             },
             'Σκεύη': {
-                suggestedProducts: ['Ecolab Assert Lemon', 'Ecolab Solid Hero'],
-                defaultProduct: 'Ecolab Assert Lemon',
+                suggestedProducts: ['LACIP UNIVERSAL', 'SEPTOFORTE 20', 'DESTRAL ACTIVE'],
+                defaultProduct: 'LACIP UNIVERSAL',
                 method: 'Πλύσιμο με ζεστό νερό+απορρυπαντικό → Ξέπλυμα → Στέγνωμα',
                 frequency: 'Μετά κάθε χρήση',
                 frequencyOptions: ['Μετά κάθε χρήση']
             },
             'Ταψιά/Λαμαρίνες': {
-                suggestedProducts: ['Ecolab Assert Lemon', 'Diversey Suma Grill D9'],
-                defaultProduct: 'Ecolab Assert Lemon',
+                suggestedProducts: ['LACIP UNIVERSAL', 'SEPTOFORTE 20', 'DESTRAL ACTIVE'],
+                defaultProduct: 'LACIP UNIVERSAL',
                 method: 'Αφαίρεση υπολειμμάτων → Εμβάπτιση → Τρίψιμο → Ξέπλυμα → Στέγνωμα',
                 frequency: 'Μετά κάθε χρήση',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Καθημερινά']
             },
             'Πάγος/Παγομηχανή': {
-                suggestedProducts: ['Ecolab KitchenPro Des Special'],
-                defaultProduct: 'Ecolab KitchenPro Des Special',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Άδειασμα πάγου → Καθαρισμός εσωτερικού → Απολύμανση → Ξέπλυμα → Στέγνωμα',
                 frequency: 'Εβδομαδιαία',
                 frequencyOptions: ['Εβδομαδιαία', 'Ανά 15 ημέρες']
             },
             'Δάπεδα': {
-                suggestedProducts: ['Diversey TASKI Jontec Gemini', 'Ecolab Eco-Bac Foam Plus'],
-                defaultProduct: 'Diversey TASKI Jontec Gemini',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Σκούπισμα → Σφουγγάρισμα με καθαριστικό → Σφουγγάρισμα με απολυμαντικό → Στέγνωμα',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Ανά 2-3 ώρες']
             },
             'Τοίχοι': {
-                suggestedProducts: ['Ecolab Eco-Bac Classic', 'Diversey Suma Bac D10'],
-                defaultProduct: 'Ecolab Eco-Bac Classic',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Σκούπισμα με υγρό πανί+καθαριστικό-απολυμαντικό → Στέγνωμα',
                 frequency: 'Εβδομαδιαία',
                 frequencyOptions: ['Εβδομαδιαία', 'Ανά 15 ημέρες', 'Μηνιαία']
             },
             'Τουαλέτες': {
-                suggestedProducts: ['Diversey TASKI Sani Des W9b'],
-                defaultProduct: 'Diversey TASKI Sani Des W9b',
+                suggestedProducts: ['DESTRAL ACTIVE', 'SEPTOFORTE 20', 'LACIP UNIVERSAL'],
+                defaultProduct: 'DESTRAL ACTIVE',
                 method: 'Καθαριστικό-απολυμαντικό στη λεκάνη → Τρίψιμο → Καθαρισμός καπακιού/πόμολων → Απολύμανση',
                 frequency: 'Πολλαπλές φορές ημερησίως (ανά 2-3 ώρες)',
                 frequencyOptions: ['Ανά 2-3 ώρες', 'Καθημερινά', 'Ανά ώρα']
             },
             'Τουαλέτες Πελατών': {
-                suggestedProducts: ['Diversey TASKI Sani Des W9b'],
-                defaultProduct: 'Diversey TASKI Sani Des W9b',
+                suggestedProducts: ['DESTRAL ACTIVE', 'SEPTOFORTE 20', 'LACIP UNIVERSAL'],
+                defaultProduct: 'DESTRAL ACTIVE',
                 method: 'Καθαριστικό-απολυμαντικό στη λεκάνη → Τρίψιμο → Καθαρισμός καπακιού/πόμολων → Απολύμανση',
                 frequency: 'Ανά 2-3 ώρες',
                 frequencyOptions: ['Ανά 2-3 ώρες', 'Ανά ώρα']
             },
             'Τουαλέτες Προσωπικού': {
-                suggestedProducts: ['Diversey TASKI Sani Des W9b'],
-                defaultProduct: 'Diversey TASKI Sani Des W9b',
+                suggestedProducts: ['DESTRAL ACTIVE', 'SEPTOFORTE 20', 'LACIP UNIVERSAL'],
+                defaultProduct: 'DESTRAL ACTIVE',
                 method: 'Καθαριστικό-απολυμαντικό στη λεκάνη → Τρίψιμο → Καθαρισμός καπακιού/πόμολων → Απολύμανση',
                 frequency: 'Καθημερινά + Ανά 4 ώρες',
                 frequencyOptions: ['Καθημερινά', 'Ανά 4 ώρες']
             },
             'Βιτρίνες': {
-                suggestedProducts: ['Ecolab KitchenPro Des Special', 'Diversey Suma Bac D10'],
-                defaultProduct: 'Ecolab KitchenPro Des Special',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση τροφίμων → Καθαρισμός εσωτερικού → Καθαρισμός τζαμιών → Στέγνωμα → Επανατοποθέτηση',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Εβδομαδιαία (βαθύς)']
             },
             'Ράφια': {
-                suggestedProducts: ['Ecolab Eco-Bac Classic', 'Diversey Suma Bac D10'],
-                defaultProduct: 'Ecolab Eco-Bac Classic',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Σκούπισμα σκόνης → Καθαρισμός με υγρό πανί+καθαριστικό → Στέγνωμα',
                 frequency: 'Εβδομαδιαία',
                 frequencyOptions: ['Εβδομαδιαία', 'Ανά 15 ημέρες', 'Μηνιαία']
             },
             'Αποθήκη': {
-                suggestedProducts: ['Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Ecolab Eco-Bac Classic',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Σκούπισμα δαπέδων → Σκούπισμα ραφιών → Καθαρισμός με καθαριστικό-απολυμαντικό',
                 frequency: 'Εβδομαδιαία',
                 frequencyOptions: ['Εβδομαδιαία', 'Ανά 15 ημέρες', 'Μηνιαία']
             },
             'Τραπεζαρία': {
-                suggestedProducts: ['Diversey Suma Bac D10'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση υπολειμμάτων → Σκούπισμα με καθαριστικό-απολυμαντικό → Στέγνωμα',
                 frequency: 'Μετά κάθε πελάτη',
                 frequencyOptions: ['Μετά κάθε πελάτη', 'Καθημερινά']
             },
             'Τραπέζια': {
-                suggestedProducts: ['Diversey Suma Bac D10'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Αφαίρεση υπολειμμάτων → Σκούπισμα με καθαριστικό-απολυμαντικό → Στέγνωμα',
                 frequency: 'Μετά κάθε πελάτη',
                 frequencyOptions: ['Μετά κάθε πελάτη', 'Καθημερινά']
             },
             'Μπαρ': {
-                suggestedProducts: ['Diversey Suma Bac D10'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Καθαρισμός πάγκου → Καθαρισμός εξοπλισμού → Απολύμανση επιφανειών',
                 frequency: 'Καθημερινά + Μετά κάθε βάρδια',
                 frequencyOptions: ['Καθημερινά', 'Μετά κάθε βάρδια']
             },
             'Ταμείο': {
-                suggestedProducts: ['Diversey Suma Bac D10'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Καθαρισμός επιφανειών → Απολύμανση πληκτρολογίου/οθόνης → Στέγνωμα',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Ανά βάρδια']
             },
             'Ταμεία': {
-                suggestedProducts: ['Diversey Suma Bac D10'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Καθαρισμός επιφανειών → Απολύμανση πληκτρολογίου/οθόνης → Στέγνωμα',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Ανά βάρδια']
             },
             'Χώρος Πελατών': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Diversey TASKI Jontec Gemini'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Καθαρισμός τραπεζιών/καθισμάτων → Σκούπισμα δαπέδου → Σφουγγάρισμα → Απολύμανση',
                 frequency: 'Καθημερινά + Ανά βάρδια',
                 frequencyOptions: ['Καθημερινά', 'Ανά βάρδια']
             },
             'Είσοδος': {
-                suggestedProducts: ['Diversey TASKI Jontec Gemini'],
-                defaultProduct: 'Diversey TASKI Jontec Gemini',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Σκούπισμα → Σφουγγάρισμα → Καθαρισμός τζαμιών/πόρτας',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Ανά βάρδια']
             },
             'Είσοδος/Έξοδος': {
-                suggestedProducts: ['Diversey TASKI Jontec Gemini'],
-                defaultProduct: 'Diversey TASKI Jontec Gemini',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Σκούπισμα → Σφουγγάρισμα → Καθαρισμός τζαμιών/πόρτας',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Ανά βάρδια']
             },
             'Καρότσια': {
-                suggestedProducts: ['Diversey Suma Bac D10'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Σκούπισμα με υγρό πανί+καθαριστικό-απολυμαντικό → Στέγνωμα',
                 frequency: 'Εβδομαδιαία',
                 frequencyOptions: ['Εβδομαδιαία', 'Καθημερινά']
             },
             'Απορρίμματα': {
-                suggestedProducts: ['Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Ecolab Eco-Bac Classic',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Άδειασμα κάδων → Πλύσιμο κάδων → Ξέπλυμα → Στέγνωμα → Νέα σακούλα',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Ανά βάρδια']
             },
             'Αποχέτευση': {
-                suggestedProducts: ['Ecolab Eco-Bac Foam Plus'],
-                defaultProduct: 'Ecolab Eco-Bac Foam Plus',
+                suggestedProducts: ['DESTRAL ACTIVE', 'SEPTOFORTE 20', 'LACIP UNIVERSAL'],
+                defaultProduct: 'DESTRAL ACTIVE',
                 method: 'Καθαρισμός σχαρών → Έκχυση καθαριστικού → Ξέπλυμα με άφθονο νερό',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Εβδομαδιαία']
             },
             'Οχήματα Μεταφοράς': {
-                suggestedProducts: ['Diversey Suma Bac D10'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Καθαρισμός χώρου φόρτωσης → Απολύμανση επιφανειών → Στέγνωμα',
                 frequency: 'Μετά κάθε χρήση',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Καθημερινά']
             },
             'Εξοπλισμός': {
-                suggestedProducts: ['Diversey Suma Bac D10'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Καθαρισμός με κατάλληλο καθαριστικό → Απολύμανση → Στέγνωμα',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Μετά κάθε χρήση', 'Εβδομαδιαία']
             },
             // Γενικά fallbacks
             'Γενικός Καθαρισμός': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Καθαρισμός με κατάλληλο καθαριστικό-απολυμαντικό → Στέγνωμα',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Εβδομαδιαία']
             },
             'Απολύμανση': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['DESTRAL ACTIVE', 'SEPTOFORTE 20', 'LACIP UNIVERSAL'],
+                defaultProduct: 'DESTRAL ACTIVE',
                 method: 'Ψεκασμός απολυμαντικού σε όλες τις επιφάνειες → Αναμονή → Στέγνωμα',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Ανά 2-3 ώρες']
             },
             'Βιτρίνες': {
-                suggestedProducts: ['Diversey Taski Sprint Glass', 'Ecolab Glass Cleaner'],
-                defaultProduct: 'Diversey Taski Sprint Glass',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Ψεκασμός καθαριστικού τζαμιών → Σκούπισμα με πανί → Στίλβωση',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Εβδομαδιαία', '2 φορές/εβδομάδα']
             },
             'Εργαλεία': {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Καθαρισμός εργαλείων → Απολύμανση → Στέγνωμα → Φύλαξη',
                 frequency: 'Μετά κάθε χρήση',
                 frequencyOptions: ['Μετά κάθε χρήση', 'Καθημερινά']
@@ -9561,8 +9562,8 @@ if (temp >= minTemp && temp <= maxTemp) {
             }
             // Default fallback
             return {
-                suggestedProducts: ['Diversey Suma Bac D10', 'Ecolab Eco-Bac Classic'],
-                defaultProduct: 'Diversey Suma Bac D10',
+                suggestedProducts: ['SEPTOFORTE 20', 'LACIP UNIVERSAL', 'DESTRAL ACTIVE'],
+                defaultProduct: 'SEPTOFORTE 20',
                 method: 'Καθαρισμός με κατάλληλο καθαριστικό-απολυμαντικό → Στέγνωμα',
                 frequency: 'Καθημερινά',
                 frequencyOptions: ['Καθημερινά', 'Εβδομαδιαία', 'Μετά κάθε χρήση']
@@ -9605,7 +9606,7 @@ if (temp >= minTemp && temp <= maxTemp) {
                         <span style="font-weight: 600; font-size: 1.05rem;">🧹 ${item.name}</span>
                         <button class="btn btn-danger" onclick="removeCleaningItem(${idx})" style="padding: 6px 12px;">✕</button>
                     </div>
-                    <!-- v10.2.6: Δύο ώρες - κανονική και μόνο πρωί -->
+                    <!-- v10.2.7: Δύο ώρες - κανονική και μόνο πρωί -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
                         <div>
                             <label style="font-size: 0.8rem; color: #1565c0; display: block; margin-bottom: 4px;">🕐 Ώρα (κανονική)</label>
@@ -9789,7 +9790,7 @@ if (temp >= minTemp && temp <= maxTemp) {
             }
         }
 
-        // v10.2.6: Ενημέρωση ώρας για μέρες με μόνο πρωί
+        // v10.2.7: Ενημέρωση ώρας για μέρες με μόνο πρωί
         function updateCleaningItemMorningTime(idx, newTime) {
             if (systemData.cleaningSettings?.items?.[idx]) {
                 systemData.cleaningSettings.items[idx].morningOnlyTime = newTime;
