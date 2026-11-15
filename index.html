@@ -8333,8 +8333,17 @@ if (temp >= minTemp && temp <= maxTemp) {
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
 
-                console.log('✅ [v10.3.2] Cleanup backup created:', link.download);
-                showNotification(`📦 Backup δημιουργήθηκε (${oldTemps.length + oldClean.length} εγγραφές)`);
+                console.log('✅ [v10.3.3] Cleanup backup HTML created:', link.download);
+
+                // ✅ v10.3.3: ΕΠΙΣΗΣ δημιουργία Excel backup με auto-fit στήλες
+                try {
+                    generateAndDownloadBackupExcel(oldTemps, oldClean);
+                    console.log('✅ [v10.3.3] Cleanup backup Excel created');
+                } catch (excelError) {
+                    console.warn('⚠️ Excel backup skipped:', excelError.message);
+                }
+
+                showNotification(`📦 Backup δημιουργήθηκε (${oldTemps.length + oldClean.length} εγγραφές) - HTML + Excel`);
 
             } catch (error) {
                 console.error('❌ Cleanup backup error:', error);
