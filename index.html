@@ -1,9 +1,11 @@
 <!DOCTYPE html>
+<!-- HYGIENE PRO CUSTOMER APP v10.3.6 -->
+<!-- v10.3.6: FIX - customerDocId uses license.phone ALWAYS (prevents duplicate store_data) -->
 <html lang="el">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro System</title>
+    <title>Hygiene Pro System v10.3.6</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -2177,20 +2179,20 @@
         }
 
         // Get customer document ID from phone number (stable identifier)
+        // v10.3.6 FIX: ΠΑΝΤΑ χρησιμοποιούμε το τηλέφωνο από τον κωδικό άδειας
+        // Αυτό αποτρέπει διπλά store_data όταν το businessInfo.phone διαφέρει
         function getCustomerDocId(licenseKey) {
-            // Extract phone from license key or use the businessInfo phone
-            // License format ends with: ...-XXXX-SALT where phone is encoded
-            // Better approach: use the phone from systemData
-            
             let phone = '';
-            
-            // Try to get phone from systemData (most reliable)
-            if (systemData.businessInfo && systemData.businessInfo.phone) {
-                phone = systemData.businessInfo.phone.replace(/\D/g, ''); // Remove non-digits
+
+            // ΠΡΩΤΑ: Τηλέφωνο από τον κωδικό άδειας (license.phone)
+            if (systemData.license && systemData.license.phone) {
+                phone = systemData.license.phone.replace(/\D/g, ''); // Remove non-digits
+                console.log('🔑 [v10.3.6] Using license phone for customerDocId');
             }
-            // Fallback: try to get phone from license
-            else if (systemData.license && systemData.license.phone) {
-                phone = systemData.license.phone.replace(/\D/g, '');
+            // FALLBACK: Τηλέφωνο από businessInfo (για legacy πελάτες χωρίς license.phone)
+            else if (systemData.businessInfo && systemData.businessInfo.phone) {
+                phone = systemData.businessInfo.phone.replace(/\D/g, '');
+                console.log('📋 [v10.3.6] Fallback: Using businessInfo phone for customerDocId');
             }
             
             // If we have a phone, use it as the document ID
