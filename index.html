@@ -2285,6 +2285,33 @@
             }
         }
 
+        // ✅ v10.3.5: BACKUP PHONE - Εύρεση πελάτη με backup τηλέφωνο
+        // Χρησιμοποιείται όταν χαθεί το license αλλά υπάρχει αποθηκευμένο τηλέφωνο
+        async function findCustomerByBackupPhone(backupPhone) {
+            if (!db || !backupPhone) return null;
+
+            try {
+                const cleanPhone = backupPhone.replace(/\D/g, '');
+                console.log('🔍 [v10.3.5] Searching CRM for backup phone:', cleanPhone);
+
+                const snapshot = await db.collection('customers').get();
+                for (const doc of snapshot.docs) {
+                    const customer = doc.data();
+                    const crmPhone = (customer.phone || '').replace(/\D/g, '');
+
+                    if (crmPhone === cleanPhone && customer.licenseCode) {
+                        console.log('✅ [v10.3.5] Found customer by backup phone:', customer.companyName);
+                        return customer;
+                    }
+                }
+                console.log('ℹ️ [v10.3.5] No customer found for backup phone');
+                return null;
+            } catch (e) {
+                console.log('⚠️ [v10.3.5] Backup phone search error:', e);
+                return null;
+            }
+        }
+
         // Register this device as active session (NEW device takes over)
         async function registerSession() {
             if (!db || !customerDocId) return;
@@ -2383,57 +2410,86 @@
         }
         
         // ☁️ NEW: Load data from Firebase for new device sync
-        async function loadFromFirebaseIfNeeded() {
-            if (!db || !customerDocId) return false;
-            
-            try {
-                // Check if local storage is empty (new device)
-                const hasLocalData = localStorage.getItem('hygienePro');
-                
-                if (!hasLocalData) {
-                    console.log('📱 New device detected - checking Firebase for existing data...');
-                    
-                    const doc = await db.collection('store_data').doc(customerDocId).get();
-                    if (doc.exists) {
-                        const cloudData = doc.data();
-                        
-                        // Only sync specific data fields, NOT overwrite everything
-                        if (cloudData.temperatures && cloudData.temperatures.length > 0) {
-                            systemData.temperatures = cloudData.temperatures;
-                            console.log('☁️ Synced temperatures from cloud:', cloudData.temperatures.length, 'records');
-                        }
-                        if (cloudData.cleaning && cloudData.cleaning.length > 0) {
-                            systemData.cleaning = cloudData.cleaning;
-                            console.log('☁️ Synced cleaning from cloud:', cloudData.cleaning.length, 'records');
-                        }
-                        if (cloudData.c3Records && cloudData.c3Records.length > 0) {
-                            systemData.c3Records = cloudData.c3Records;
-                            console.log('☁️ Synced C3 records from cloud:', cloudData.c3Records.length, 'records');
-                        }
-                        if (cloudData.equipment && cloudData.equipment.length > 0) {
-                            systemData.equipment = cloudData.equipment;
-                            console.log('☁️ Synced equipment from cloud:', cloudData.equipment.length, 'items');
-                        }
-                        if (cloudData.cleaningSettings) {
-                            systemData.cleaningSettings = cloudData.cleaningSettings;
-                            console.log('☁️ Synced cleaning settings from cloud');
-                        }
-                        if (cloudData.businessInfo) {
-                            // Merge business info, keeping local values if they exist
-                            systemData.businessInfo = { ...systemData.businessInfo, ...cloudData.businessInfo };
-                            console.log('☁️ Synced business info from cloud');
-                        }
-                        
-                        saveData();
-                        console.log('✅ Cloud data synced to new device');
-                        return true;
-                    }
-                }
-                return false;
-            } catch (e) {
-                console.log('⚠️ Cloud sync error:', e);
+        // ✅ v10.3.5: FIREBASE PRIORITY - Φορτώνει ΠΑΝΤΑ από Firebase
+        async function loadFromFirebaseAlways() {
+            if (!db || !customerDocId) {
+                console.log('⚠️ [v10.3.5] Cannot load from Firebase - db or customerDocId missing');
                 return false;
             }
+
+            try {
+                console.log('☁️ [v10.3.5] FIREBASE PRIORITY - Loading data from cloud...');
+                console.log('☁️ [v10.3.5] CustomerDocId:', customerDocId);
+
+                const doc = await db.collection('store_data').doc(customerDocId).get();
+
+                if (doc.exists) {
+                    const cloudData = doc.data();
+                    console.log('☁️ [v10.3.5] Found cloud data!');
+
+                    // ✅ FIREBASE PRIORITY: Cloud data REPLACES local data
+                    if (cloudData.equipment && cloudData.equipment.length > 0) {
+                        systemData.equipment = cloudData.equipment;
+                        console.log('☁️ [v10.3.5] Loaded equipment from cloud:', cloudData.equipment.length, 'items');
+                    }
+                    if (cloudData.temperatures && cloudData.temperatures.length > 0) {
+                        systemData.temperatures = cloudData.temperatures;
+                        console.log('☁️ [v10.3.5] Loaded temperatures from cloud:', cloudData.temperatures.length, 'records');
+                    }
+                    if (cloudData.cleaning && cloudData.cleaning.length > 0) {
+                        systemData.cleaning = cloudData.cleaning;
+                        console.log('☁️ [v10.3.5] Loaded cleaning from cloud:', cloudData.cleaning.length, 'records');
+                    }
+                    if (cloudData.c3Records && cloudData.c3Records.length > 0) {
+                        systemData.c3Records = cloudData.c3Records;
+                        console.log('☁️ [v10.3.5] Loaded C3 records from cloud:', cloudData.c3Records.length, 'records');
+                    }
+                    if (cloudData.cleaningSettings) {
+                        systemData.cleaningSettings = cloudData.cleaningSettings;
+                        console.log('☁️ [v10.3.5] Loaded cleaning settings from cloud');
+                    }
+                    if (cloudData.staff && cloudData.staff.length > 0) {
+                        systemData.staff = cloudData.staff;
+                        console.log('☁️ [v10.3.5] Loaded staff from cloud:', cloudData.staff.length, 'members');
+                    }
+                    if (cloudData.pestControl && cloudData.pestControl.length > 0) {
+                        systemData.pestControl = cloudData.pestControl;
+                        console.log('☁️ [v10.3.5] Loaded pest control from cloud:', cloudData.pestControl.length, 'records');
+                    }
+                    if (cloudData.businessInfo) {
+                        // Merge business info, keeping license-related local values
+                        const localName = systemData.businessInfo.name;
+                        const localPhone = systemData.businessInfo.phone;
+                        systemData.businessInfo = { ...systemData.businessInfo, ...cloudData.businessInfo };
+                        // Keep license values if they exist locally
+                        if (localName) systemData.businessInfo.name = localName;
+                        if (localPhone) systemData.businessInfo.phone = localPhone;
+                        console.log('☁️ [v10.3.5] Loaded business info from cloud');
+                    }
+
+                    // ✅ Mark setup as complete if we have equipment
+                    if (systemData.equipment && systemData.equipment.length > 0) {
+                        systemData.setupComplete = true;
+                        console.log('☁️ [v10.3.5] Setup marked as complete (has equipment)');
+                    }
+
+                    // Save to localStorage as backup
+                    saveData();
+                    console.log('✅ [v10.3.5] FIREBASE PRIORITY - Cloud data loaded successfully!');
+                    return true;
+                } else {
+                    console.log('ℹ️ [v10.3.5] No cloud data found for this customer - new setup needed');
+                    return false;
+                }
+            } catch (e) {
+                console.log('⚠️ [v10.3.5] Firebase load error:', e);
+                return false;
+            }
+        }
+
+        // Legacy function - kept for compatibility
+        async function loadFromFirebaseIfNeeded() {
+            return await loadFromFirebaseAlways();
         }
 
         // Initialize Firebase on load
@@ -3742,12 +3798,27 @@
             if (firebaseReady) {
                 customerDocId = getCustomerDocId(key);
                 await registerSession();
+
+                // ✅ v10.3.5: FIREBASE PRIORITY - Load existing data if available
+                console.log('☁️ [v10.3.5] Checking for existing data in Firebase...');
+                const hasCloudData = await loadFromFirebaseAlways();
+                if (hasCloudData) {
+                    console.log('✅ [v10.3.5] Existing data loaded from Firebase - no setup needed!');
+                    showNotification('☁️ Τα δεδομένα σας φορτώθηκαν από το cloud!');
+                }
             }
-            
+
             // v7.6: Force immediate save
             console.log('💾 Saving license...');
             saveData();
-            
+
+            // ✅ v10.3.5: BACKUP PHONE - Αποθηκεύω το τηλέφωνο ξεχωριστά
+            // Αυτό επιτρέπει αυτόματη ανάκτηση ακόμα κι αν χαθεί το license
+            if (phone) {
+                localStorage.setItem('hygienePro_backupPhone', phone);
+                console.log('📱 [v10.3.5] Backup phone saved:', phone);
+            }
+
             // Verify save worked
             setTimeout(() => {
                 const verify = localStorage.getItem('hygienePro');
@@ -3760,14 +3831,21 @@
             
             // v9: If multi-store, show store selector first
             document.getElementById('licenseActivation').classList.remove('active');
-            if (multiStoreConfig.enabled) {
+
+            // ✅ v10.3.5: If data was loaded from Firebase, go to dashboard instead of setup
+            if (systemData.setupComplete && systemData.equipment && systemData.equipment.length > 0) {
+                console.log('✅ [v10.3.5] Data exists - going to dashboard');
+                document.getElementById('mainDashboard').classList.add('active');
+                initializeDashboard();
+                showNotification('✅ Ενεργοποίηση επιτυχής! ☁️ Τα δεδομένα σας φορτώθηκαν!');
+            } else if (multiStoreConfig.enabled) {
                 showStoreSelectorModal();
+                showNotification('✅ Ενεργοποίηση επιτυχής!' + ' 🏪 Καταστήματα: ' + storeCount);
             } else {
                 document.getElementById('setupWizard').classList.add('active');
+                showNotification('✅ Ενεργοποίηση επιτυχής!');
             }
 
-            showNotification('✅ Ενεργοποίηση επιτυχής!' + (storeCount > 1 ? ' 🏪 Καταστήματα: ' + storeCount : ''));
-            
             console.log('✅ License activated: ' + businessName + (storeCount > 1 ? ' (Stores: ' + storeCount + ')' : ''));
         }
         
@@ -3866,7 +3944,30 @@
             
             // ============ CASE 1: NO LICENSE ============
             if (!systemData.license) {
-                console.log('➡️ CASE 1: No license - Show activation');
+                console.log('➡️ CASE 1: No license');
+
+                // ✅ v10.3.5: BACKUP PHONE RECOVERY - Ψάχνω για backup τηλέφωνο
+                const backupPhone = localStorage.getItem('hygienePro_backupPhone');
+                if (backupPhone && firebaseReady) {
+                    console.log('📱 [v10.3.5] Found backup phone, searching CRM...');
+
+                    const customer = await findCustomerByBackupPhone(backupPhone);
+                    if (customer && customer.licenseCode) {
+                        console.log('🎉 [v10.3.5] AUTO-RECOVERY: Found customer in CRM!');
+
+                        // Βάζω τον κωδικό στο input και τον ενεργοποιώ αυτόματα
+                        document.getElementById('activationCodeInput').value = customer.licenseCode;
+
+                        showNotification('🔄 Αυτόματη ανάκτηση... Βρέθηκε: ' + customer.companyName);
+
+                        // Ενεργοποίηση αυτόματα
+                        await validateAndActivateLicense();
+                        return;
+                    }
+                }
+
+                // Αν δεν βρέθηκε backup ή πελάτης, εμφάνισε activation screen
+                console.log('➡️ CASE 1: No backup found - Show activation');
                 document.getElementById('licenseActivation').classList.add('active');
                 showAlert('⚠️ Ενεργοποίηση Απαιτείται', 'Παρακαλώ εισάγετε τον κωδικό πελάτη', 'warning');
                 return;
@@ -3969,10 +4070,16 @@
                             
                             systemData.setupComplete = true;
                             saveData();
-                            
+
+                            // ✅ v10.3.5: Update backup phone on auto-renewal
+                            if (systemData.license.phone) {
+                                localStorage.setItem('hygienePro_backupPhone', systemData.license.phone);
+                                console.log('📱 [v10.3.5] Backup phone updated:', systemData.license.phone);
+                            }
+
                             // Update Firebase with new customer doc ID
                             customerDocId = getCustomerDocId(newKey);
-                            
+
                             console.log('✅ Auto-renewal successful! New expiry:', newExpiryDate.toLocaleDateString('el-GR'));
                             showAlert('🔄 Αυτόματη Ανανέωση', 'Η άδειά σας ανανεώθηκε! Λήγει: ' + newExpiryDate.toLocaleDateString('el-GR'), 'success');
                             
