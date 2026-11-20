@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<!-- HYGIENE PRO CUSTOMER APP v10.3.6 -->
+<!-- HYGIENE PRO CUSTOMER APP v10.3.7 -->
+<!-- v10.3.7: DEMO toggle badge - customers marked as DEMO show clickable toggle -->
 <!-- v10.3.6: FIX - customerDocId uses license.phone ALWAYS (prevents duplicate store_data) -->
 <html lang="el">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hygiene Pro System v10.3.6</title>
+    <title>Hygiene Pro System v10.3.7</title>
     
     <!-- LZ-String Compression Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -88,14 +89,27 @@
         }
         
         @keyframes license-pulse {
-            0%, 100% { 
+            0%, 100% {
                 transform: scale(1);
                 box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
             }
-            50% { 
+            50% {
                 transform: scale(1.05);
                 box-shadow: 0 0 15px 5px rgba(220, 53, 69, 0.3);
             }
+        }
+
+        /* v10.3.7: DEMO state - discrete, same style, clickable toggle */
+        .license-badge.demo {
+            cursor: pointer;
+        }
+
+        .license-badge.demo:hover {
+            transform: scale(1.02);
+        }
+
+        .license-badge.demo:active {
+            transform: scale(0.98);
         }
 
         .nav {
@@ -2215,8 +2229,9 @@
         // Check if customer exists in CRM database
         // v10.3.2: Ψάχνει με ΤΗΛΕΦΩΝΟ (όχι κωδικό) για να μην κλειδώνει μετά από ανανέωση
         // v10.3.2: Επίσης ελέγχει αν ο πελάτης είναι σε αναστολή (suspended)
+        // v10.3.7: Επιστρέφει και το isDemo flag
         async function checkLicenseInCRM(licenseKey) {
-            if (!db) return { exists: true, suspended: false }; // If no Firebase, allow (offline mode)
+            if (!db) return { exists: true, suspended: false, isDemo: false }; // If no Firebase, allow (offline mode)
 
             try {
                 // v10.3.2: Παίρνουμε το τηλέφωνο από το τοπικό license
@@ -2233,10 +2248,12 @@
                         // v10.3.2: Έλεγχος suspended flag
                         if (customer.suspended === true) {
                             console.log('⏸️ Customer found but SUSPENDED in CRM');
-                            return { exists: true, suspended: true };
+                            return { exists: true, suspended: true, isDemo: false };
                         }
-                        console.log('✅ Customer found in CRM by phone (active)');
-                        return { exists: true, suspended: false };
+                        // v10.3.7: Έλεγχος isDemo flag
+                        const isDemo = customer.isDemo === true;
+                        console.log('✅ Customer found in CRM by phone (active)', isDemo ? '- DEMO' : '');
+                        return { exists: true, suspended: false, isDemo: isDemo };
                     }
                 }
 
@@ -2246,18 +2263,20 @@
                     if (customer.licenseCode === licenseKey) {
                         if (customer.suspended === true) {
                             console.log('⏸️ License found but SUSPENDED in CRM');
-                            return { exists: true, suspended: true };
+                            return { exists: true, suspended: true, isDemo: false };
                         }
-                        console.log('✅ License found in CRM (active)');
-                        return { exists: true, suspended: false };
+                        // v10.3.7: Έλεγχος isDemo flag
+                        const isDemo = customer.isDemo === true;
+                        console.log('✅ License found in CRM (active)', isDemo ? '- DEMO' : '');
+                        return { exists: true, suspended: false, isDemo: isDemo };
                     }
                 }
 
                 console.log('❌ Customer NOT found in CRM');
-                return { exists: false, suspended: false };
+                return { exists: false, suspended: false, isDemo: false };
             } catch (e) {
                 console.log('⚠️ CRM check error:', e);
-                return { exists: true, suspended: false }; // On error, allow (offline mode)
+                return { exists: true, suspended: false, isDemo: false }; // On error, allow (offline mode)
             }
         }
 
@@ -3703,6 +3722,7 @@
             
             // ☁️ Check if license exists in CRM
             // v10.3.2: Έλεγχος και για suspended status
+            // v10.3.7: Έλεγχος isDemo flag
             if (firebaseReady) {
                 const crmStatus = await checkLicenseInCRM(key);
                 if (!crmStatus.exists) {
@@ -3713,6 +3733,9 @@
                     showLicenseError('Η συνδρομή σας έχει ανασταλεί. Επικοινωνήστε με τον πάροχο για ενεργοποίηση.');
                     return;
                 }
+                // v10.3.7: Set DEMO flag
+                isDemoCustomer = crmStatus.isDemo;
+                showingDemoBadge = true; // Reset to show DEMO on new activation
             }
             
             // Validate format
@@ -4008,7 +4031,13 @@
                         '⚠️ Τα δεδομένα σας ΔΕΝ έχουν διαγραφεί.', 'warning');
                     return;
                 }
-                
+
+                // v10.3.7: Set DEMO flag from CRM
+                isDemoCustomer = crmStatus.isDemo;
+                if (isDemoCustomer) {
+                    console.log('🏷️ Customer is marked as DEMO');
+                }
+
                 // Register this session
                 await registerSession();
             }
@@ -4430,22 +4459,48 @@
                   (storeCount > 1 ? '\n\n🏪 Καταστήματα: ' + storeCount : ''));
         }
 
+        // v10.3.7: DEMO toggle state
+        let isDemoCustomer = false;
+        let showingDemoBadge = true; // Start showing DEMO if isDemo=true
+
         function updateLicenseDisplay() {
             const badge = document.getElementById('licenseBadge');
             const status = document.getElementById('licenseStatus');
-            
-            // Remove warning class by default
+
+            // Remove classes by default
             badge.classList.remove('warning');
-            
+            badge.classList.remove('demo');
+
             if (!systemData.license) {
                 status.textContent = 'ΕΝΕΡΓΟΠΟΙΗΣΗ H-PRO';
                 return;
             }
-            
+
             const expiry = new Date(systemData.license.expiry);
             const today = new Date();
             const daysLeft = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
-            
+
+            // v10.3.7: Check if DEMO customer
+            if (isDemoCustomer) {
+                badge.classList.add('demo');
+                badge.onclick = toggleDemoBadge;
+
+                if (showingDemoBadge) {
+                    status.textContent = 'DEMO';
+                } else {
+                    // Show days when toggled
+                    if (daysLeft < 0) {
+                        status.textContent = '❌ Η άδεια έληξε';
+                    } else {
+                        status.textContent = `✓ Λήξη σε ${daysLeft} ημέρες`;
+                    }
+                }
+                return;
+            }
+
+            // Normal customers (not DEMO)
+            badge.onclick = null;
+
             if (daysLeft < 0) {
                 status.textContent = '❌ Η άδεια έληξε';
                 badge.classList.add('warning');
@@ -4456,6 +4511,12 @@
             } else {
                 status.textContent = `✓ Λήξη σε ${daysLeft} ημέρες`;
             }
+        }
+
+        // v10.3.7: Toggle DEMO badge on click
+        function toggleDemoBadge() {
+            showingDemoBadge = !showingDemoBadge;
+            updateLicenseDisplay();
         }
 
         function closeLicenseModal() {
